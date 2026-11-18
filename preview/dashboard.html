@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ru">
+	<head>
+		<meta charset="utf-8" />
+		<title>Note Galaxy — dashboard preview</title>
+		<link rel="stylesheet" href="../styles.css" />
+		<style>
+			html,
+			body {
+				margin: 0;
+				height: 100%;
+			}
+			.ng-root {
+				background-image: url("shot4.png");
+				background-size: cover;
+				background-position: center;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="ng-root">
+			<div class="ng-dashboard">
+				<div class="ng-head">
+					<div class="ng-eyebrow">NOTE GALAXY</div>
+					<div class="ng-greeting">Доброй ночи, Эмир</div>
+					<div class="ng-sub">128 заметок · 342 связи</div>
+				</div>
+				<div class="ng-meta">
+					<div class="ng-clock">23:48</div>
+					<div class="ng-date">вторник, 18 ноября</div>
+				</div>
+				<div class="ng-cards">
+					<div class="ng-card"><span class="ng-num">128</span><span class="ng-lbl">заметки</span></div>
+					<div class="ng-card"><span class="ng-num">9</span><span class="ng-lbl">проекты</span></div>
+					<div class="ng-card"><span class="ng-num">342</span><span class="ng-lbl">связи</span></div>
+					<div class="ng-card"><span class="ng-num">57</span><span class="ng-lbl">теги</span></div>
+				</div>
+				<div class="ng-section">
+					<div class="ng-section-title">Созвездия</div>
+					<div class="ng-chips">
+						<button class="ng-chip is-active"><span class="ng-chip-label">все</span></button>
+						<button class="ng-chip"><span class="ng-dot" style="background: #4fc3f7"></span><span class="ng-chip-label">Research</span><span class="ng-chip-count">34</span></button>
+						<button class="ng-chip"><span class="ng-dot" style="background: #ffb74d"></span><span class="ng-chip-label">Projects</span><span class="ng-chip-count">21</span></button>
+						<button class="ng-chip"><span class="ng-dot" style="background: #ba68c8"></span><span class="ng-chip-label">Tech</span><span class="ng-chip-count">17</span></button>
+						<button class="ng-chip"><span class="ng-dot" style="background: #4db6ac"></span><span class="ng-chip-label">Ideas</span><span class="ng-chip-count">12</span></button>
+					</div>
+				</div>
+				<div class="ng-section">
+					<div class="ng-section-title">Недавние</div>
+					<div class="ng-recent">
+						<button class="ng-recent-item"><span class="ng-recent-title">Аккреционный диск</span><span class="ng-recent-when">2 мин</span></button>
+						<button class="ng-recent-item"><span class="ng-recent-title">Идеи для 3D-графа</span><span class="ng-recent-when">18 мин</span></button>
+						<button class="ng-recent-item"><span class="ng-recent-title">Шейдеры и линзирование</span><span class="ng-recent-when">1 ч</span></button>
+						<button class="ng-recent-item"><span class="ng-recent-title">План на неделю</span><span class="ng-recent-when">3 ч</span></button>
+						<button class="ng-recent-item"><span class="ng-recent-title">Obsidian API заметки</span><span class="ng-recent-when">вчера</span></button>
+					</div>
+				</div>
+				<div class="ng-hint">Тяните — орбита · колесо — масштаб · клик по звезде — открыть заметку</div>
+			</div>
+			<div class="ng-toolbar">
+				<button class="ng-tool">↻</button>
+				<button class="ng-tool">◎</button>
+				<button class="ng-tool">☰</button>
+			</div>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,6 @@
+node_modules/
+preview/bundle.js
+preview/shot*.png
+preview/dash.png
+*.log
+.DS_Store

@@ -39,8 +39,6 @@ export class NoteGalaxySettingTab extends PluginSettingTab {
 		const s = t();
 		containerEl.empty();
 
-		containerEl.createEl("h2", { text: s.settingsHeading });
-
 		new Setting(containerEl)
 			.setName(s.settingLanguage)
 			.setDesc(s.settingLanguageDesc)

@@ -47,7 +47,8 @@ export default class NoteGalaxyPlugin extends Plugin {
 	}
 
 	onunload(): void {
-		this.app.workspace.detachLeavesOfType(VIEW_TYPE);
+		// Leaves are intentionally left in place: Obsidian re-attaches views of
+		// registered view types on update, and detaching here would lose them.
 	}
 
 	/** Switches the UI language without reloading the app. */

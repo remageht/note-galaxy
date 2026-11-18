@@ -28,7 +28,6 @@ const ptBR: Strings = {
 	toolbarReset: "Redefinir visão",
 	toolbarDashboard: "Painel",
 
-	settingsHeading: "Note Galaxy",
 	settingLanguage: "Idioma",
 	settingLanguageDesc: "Idioma da interface. «Auto» segue o idioma do Obsidian.",
 	languageAuto: "Auto",

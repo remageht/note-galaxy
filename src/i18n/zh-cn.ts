@@ -28,7 +28,6 @@ const zhCN: Strings = {
 	toolbarReset: "重置视图",
 	toolbarDashboard: "仪表盘",
 
-	settingsHeading: "Note Galaxy",
 	settingLanguage: "语言",
 	settingLanguageDesc: "界面语言。「自动」跟随 Obsidian 的语言。",
 	languageAuto: "自动",

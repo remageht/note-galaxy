@@ -6,7 +6,7 @@ A 3D note graph for [Obsidian](https://obsidian.md). Notes become stars orbiting
 animated black hole, projects glow as golden cores, and a dashboard greets you with
 the day's context.
 
-![Note Galaxy](docs/screenshot.png)
+![Note Galaxy](./docs/screenshot.png)
 
 ## Features
 
@@ -21,7 +21,7 @@ the day's context.
 - **11 languages** — English, Русский, Українська, Deutsch, Español, Français, Italiano,
   Português (Brasil), Polski, 简体中文, 日本語. Auto-detected from Obsidian, switchable in settings.
 
-![Dashboard](docs/dashboard.png)
+![Dashboard](./docs/dashboard.png)
 
 ## Install
 
@@ -92,6 +92,11 @@ Then open `preview/index.html` in a browser.
 2. Add the code to `LanguageCode` in `src/i18n/types.ts`.
 3. Import the dictionary and add it to `DICTS` and `LANGUAGES` in `src/i18n/index.ts`.
 4. Run `npm run build`. The settings dropdown picks the new language automatically.
+
+## Credits
+
+Built with [three.js](https://threejs.org) (MIT). The bundled license notice is
+preserved at the end of `main.js`.
 
 ## License
 

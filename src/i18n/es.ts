@@ -28,7 +28,6 @@ const es: Strings = {
 	toolbarReset: "Restablecer vista",
 	toolbarDashboard: "Panel",
 
-	settingsHeading: "Note Galaxy",
 	settingLanguage: "Idioma",
 	settingLanguageDesc: "Idioma de la interfaz. «Auto» sigue el idioma de Obsidian.",
 	languageAuto: "Auto",

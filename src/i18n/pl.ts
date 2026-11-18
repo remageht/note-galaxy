@@ -36,7 +36,6 @@ const pl: Strings = {
 	toolbarReset: "Przywróć widok",
 	toolbarDashboard: "Panel",
 
-	settingsHeading: "Note Galaxy",
 	settingLanguage: "Język",
 	settingLanguageDesc: "Język interfejsu. „Auto” podąża za językiem Obsidiana.",
 	languageAuto: "Auto",

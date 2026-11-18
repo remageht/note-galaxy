@@ -36,7 +36,6 @@ const uk: Strings = {
 	toolbarReset: "Скинути вид",
 	toolbarDashboard: "Панель",
 
-	settingsHeading: "Note Galaxy",
 	settingLanguage: "Мова",
 	settingLanguageDesc: "Мова інтерфейсу. «Авто» — як в Obsidian.",
 	languageAuto: "Авто",

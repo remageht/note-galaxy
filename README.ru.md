@@ -6,7 +6,7 @@
 летящими вокруг анимированной чёрной дыры, проекты светятся золотыми ядрами,
 а дашборд здоровается и показывает контекст дня.
 
-![Note Galaxy](docs/screenshot.png)
+![Note Galaxy](./docs/screenshot.png)
 
 ## Возможности
 
@@ -21,7 +21,7 @@
 - **Одиннадцать языков** — English, Русский, Українська, Deutsch, Español, Français, Italiano,
   Português (Brasil), Polski, 简体中文, 日本語. Определяется по языку Obsidian, переключается в настройках.
 
-![Дашборд](docs/dashboard.png)
+![Дашборд](./docs/dashboard.png)
 
 ## Установка
 
@@ -92,6 +92,11 @@ npx esbuild preview/preview.ts --bundle --format=iife --outfile=preview/bundle.j
 2. Добавьте код в `LanguageCode` в `src/i18n/types.ts`.
 3. Импортируйте словарь и добавьте его в `DICTS` и `LANGUAGES` в `src/i18n/index.ts`.
 4. Запустите `npm run build`. Выпадающий список в настройках подхватит язык сам.
+
+## Благодарности
+
+Сделано на [three.js](https://threejs.org) (MIT). Уведомление о лицензии
+сохранено в конце `main.js`.
 
 ## Лицензия
 

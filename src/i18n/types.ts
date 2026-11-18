@@ -41,7 +41,6 @@ export interface Strings {
 	toolbarReset: string;
 	toolbarDashboard: string;
 
-	settingsHeading: string;
 	settingLanguage: string;
 	settingLanguageDesc: string;
 	languageAuto: string;

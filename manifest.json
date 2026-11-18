@@ -1,9 +1,10 @@
 {
 	"id": "note-galaxy",
 	"name": "Note Galaxy",
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"minAppVersion": "1.7.2",
 	"description": "A 3D note graph with an animated accretion disk, star-like notes and a live dashboard.",
 	"author": "Emir",
+	"authorUrl": "https://github.com/remageht",
 	"isDesktopOnly": false
 }

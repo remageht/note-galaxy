@@ -1,6 +1,6 @@
 {
   "name": "note-galaxy",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "3D note graph with accretion disk, for Obsidian",
   "main": "main.js",
   "scripts": {

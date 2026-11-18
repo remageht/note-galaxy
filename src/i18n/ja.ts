@@ -28,7 +28,6 @@ const ja: Strings = {
 	toolbarReset: "視点をリセット",
 	toolbarDashboard: "ダッシュボード",
 
-	settingsHeading: "Note Galaxy",
 	settingLanguage: "言語",
 	settingLanguageDesc: "インターフェースの言語。「自動」は Obsidian の言語に合わせます。",
 	languageAuto: "自動",

@@ -34,12 +34,6 @@ export class NoteGalaxySettingTab extends PluginSettingTab {
 		this.plugin = plugin;
 	}
 
-	// Obsidian 1.13+ renders the tab from getSettingDefinitions(); this only
-	// satisfies the abstract contract inherited from SettingTab.
-	display(): void {
-		this.containerEl.empty();
-	}
-
 	getSettingDefinitions(): SettingDefinitionItem[] {
 		const s = t();
 		const languageOptions: Record<string, string> = { auto: s.languageAuto };

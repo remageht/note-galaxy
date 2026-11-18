@@ -20,8 +20,24 @@ the day's context.
   scroll zooms, drag orbits.
 - **11 languages** — English, Русский, Українська, Deutsch, Español, Français, Italiano,
   Português (Brasil), Polski, 简体中文, 日本語. Auto-detected from Obsidian, switchable in settings.
+- **Infall transition** — opening a note sends it spiralling into the horizon, with a
+  shock ring at the crossing. Skipped when the system asks for reduced motion.
+- **Quasar jets** — the most connected note powers jets above and below the disk and
+  feeds them with a visible accretion stream.
+- **Activity layout** — recently edited notes orbit closer to the disk and glow hotter,
+  stale ones drift out to the shell and cool down.
+- **Adaptive quality** — glow and resolution step down when frames drop, and a lost
+  WebGL context rebuilds itself instead of freezing on a black canvas.
 
 ![Dashboard](./docs/dashboard.png)
+
+### Opening a note
+
+![A note falling into the black hole](./docs/gallery/infall.gif)
+
+### Quasar jets
+
+![Quasar jets above the most connected note](./docs/gallery/quasar-jets.png)
 
 ## Install
 

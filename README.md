@@ -18,7 +18,8 @@ the day's context.
   folder "constellations" with a filter, and recent notes.
 - **Interaction** — hover highlights a star's links and title, click opens the note,
   scroll zooms, drag orbits.
-- **Bilingual UI** — English and Russian out of the box, auto-detected from Obsidian.
+- **11 languages** — English, Русский, Українська, Deutsch, Español, Français, Italiano,
+  Português (Brasil), Polski, 简体中文, 日本語. Auto-detected from Obsidian, switchable in settings.
 
 ![Dashboard](docs/dashboard.png)
 
@@ -68,7 +69,7 @@ npm run build   # type-check + production bundle
 ```
 src/
   main.ts              plugin entry, commands, settings
-  i18n.ts              English/Russian dictionaries
+  i18n/                dictionaries and locale matching
   view/GraphView.ts    ItemView: scene, camera, raycasting, labels
   scene/blackhole.ts   black hole, accretion disk, starfield
   scene/notes.ts       instanced note stars and links
@@ -87,9 +88,10 @@ Then open `preview/index.html` in a browser.
 
 ## Adding a language
 
-1. Copy the `en` object in `src/i18n.ts` and translate the strings.
-2. Add the code to `LanguageCode`, `DICTS` and `LANGUAGES`.
-3. Run `npm run build`. The settings dropdown picks the new language automatically.
+1. Copy `src/i18n/en.ts` to `src/i18n/<code>.ts` and translate the strings.
+2. Add the code to `LanguageCode` in `src/i18n/types.ts`.
+3. Import the dictionary and add it to `DICTS` and `LANGUAGES` in `src/i18n/index.ts`.
+4. Run `npm run build`. The settings dropdown picks the new language automatically.
 
 ## License
 

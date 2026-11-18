@@ -1,5 +1,6 @@
 node_modules/
 preview/bundle.js
+preview/i18n-test.cjs
 preview/shot*.png
 preview/dash.png
 *.log

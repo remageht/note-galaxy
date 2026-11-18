@@ -1,0 +1,63 @@
+import type { Strings } from "./types";
+
+const ja: Strings = {
+	locale: "ja-JP",
+
+	ribbonOpen: "Note Galaxy：3Dグラフを開く",
+	commandOpen: "3Dグラフを開く",
+	commandRebuild: "3Dグラフを再構築",
+	viewTitle: "Note Galaxy",
+
+	greetingMorning: "おはようございます",
+	greetingDay: "こんにちは",
+	greetingEvening: "こんばんは",
+	greetingNight: "おやすみなさい",
+
+	eyebrow: "NOTE GALAXY",
+	statNotes: "ノート",
+	statProjects: "プロジェクト",
+	statLinks: "リンク",
+	statTags: "タグ",
+	sectionFolders: "星座",
+	sectionRecent: "最近",
+	chipAll: "すべて",
+	emptyRecent: "まだ何もありません — 最初のノートを作成しましょう。",
+	hint: "ドラッグ — 周回 · ホイール — ズーム · 星をクリック — ノートを開く",
+
+	toolbarRebuild: "グラフを再構築",
+	toolbarReset: "視点をリセット",
+	toolbarDashboard: "ダッシュボード",
+
+	settingsHeading: "Note Galaxy",
+	settingLanguage: "言語",
+	settingLanguageDesc: "インターフェースの言語。「自動」は Obsidian の言語に合わせます。",
+	languageAuto: "自動",
+	settingName: "挨拶に使う名前",
+	settingNameDesc: "「こんばんは、…」のように表示されます。空欄なら挨拶のみ。",
+	settingNamePlaceholder: "Emir",
+	settingDashboard: "ダッシュボード",
+	settingDashboardDesc: "挨拶・統計・最近のノートを表示するパネル。",
+	settingLabels: "ノートのラベル",
+	settingLabelsDesc: "最も多くリンクされたノートのタイトルを空間に表示します。",
+	settingBloom: "グロー（bloom）",
+	settingBloomDesc: "星と円盤の周囲の光の強さ。",
+	settingDisk: "円盤の速度",
+	settingDiskDesc: "降着円盤が回転する速さ。",
+	settingStars: "星のサイズ",
+	settingStarsDesc: "ノートの点の大きさ。",
+	settingOrbit: "銀河の回転",
+	settingOrbitDesc: "0 にするとノートの雲が静止します。",
+	settingMaxNodes: "最大ノート数",
+	settingMaxNodesDesc: "3D に表示する、リンクの多いノートの数。",
+
+	whenJustNow: "たった今",
+	whenMinutes: (n) => `${n} 分`,
+	whenHours: (n) => `${n} 時間`,
+	whenDays: (n) => `${n} 日`,
+	whenMonths: (n) => `${n} か月`,
+
+	noteCount: (n) => `${n} 件のノート`,
+	linkCount: (n) => `${n} 件のリンク`,
+};
+
+export default ja;

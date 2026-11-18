@@ -8,6 +8,8 @@ export interface GraphNode {
 	kind: NodeKind;
 	folder: string;
 	degree: number;
+	/** 1 = edited just now, 0 = untouched for a month or longer. */
+	recency: number;
 	color: number;
 	size: number;
 	x: number;
@@ -141,19 +143,25 @@ export function buildGraph(app: App, maxNodes: number): VaultGraph {
 	const index = new Map<string, number>();
 	chosen.forEach((f, i) => index.set(f.path, i));
 
+	const now = Date.now();
 	const nodes: GraphNode[] = chosen.map((file) => {
 		const folder = topFolder(file.path);
 		const project = isProject(app, file);
 		const deg = degree.get(file.path) ?? 0;
-		const color = project ? hueToHex(0.085, 0.85, 0.65) : hueToHex(folder ? hashHue(folder) : 0.56, 0.62, 0.62);
+		const ageDays = Math.max(0, (now - file.stat.mtime) / 86_400_000);
+		const recency = Math.max(0, Math.min(1, 1 - ageDays / 30));
+		const color = project
+			? hueToHex(0.085, 0.85, 0.6 + 0.08 * recency)
+			: hueToHex(folder ? hashHue(folder) : 0.56, 0.62 + 0.14 * recency, 0.56 + 0.12 * recency);
 		return {
 			path: file.path,
 			title: file.basename,
 			kind: project ? "project" : "note",
 			folder: folder || "·",
 			degree: deg,
+			recency,
 			color,
-			size: 0.24 + Math.min(0.4, Math.log2(1 + deg) * 0.075) + (project ? 0.1 : 0),
+			size: 0.24 + Math.min(0.4, Math.log2(1 + deg) * 0.075) + (project ? 0.1 : 0) + recency * 0.05,
 			x: 0,
 			y: 0,
 			z: 0,

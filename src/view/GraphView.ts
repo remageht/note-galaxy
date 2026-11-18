@@ -10,6 +10,8 @@ import { buildGraph, VaultGraph } from "../data/graph";
 import { layout3d } from "../data/layout";
 import { BlackHole } from "../scene/blackhole";
 import { NoteCloud } from "../scene/notes";
+import { InfallEffect } from "../scene/infall";
+import { QuasarJets } from "../scene/jets";
 import { Dashboard, iconButton } from "../ui/dashboard";
 import { t } from "../i18n";
 
@@ -46,6 +48,24 @@ export class NoteGalaxyView extends ItemView {
 	private controls!: OrbitControls;
 	private blackhole!: BlackHole;
 	private notes: NoteCloud | null = null;
+	private jets: QuasarJets | null = null;
+	private infall: InfallEffect | null = null;
+	private infallPath: string | null = null;
+	private noticeEl: HTMLDivElement | null = null;
+	private quality = 1;
+	private activityLayoutApplied = true;
+
+	private readonly handleContextLost = (event: Event): void => {
+		event.preventDefault();
+		window.cancelAnimationFrame(this.raf);
+		this.root?.addClass("is-context-lost");
+	};
+
+	private readonly handleContextRestored = (): void => {
+		this.restoreContext();
+	};
+	private frameAvg = 0;
+	private framesSinceCheck = 0;
 
 	private dashboard!: Dashboard;
 	private labels: { index: number; el: HTMLDivElement }[] = [];
@@ -95,6 +115,8 @@ export class NoteGalaxyView extends ItemView {
 
 		this.hoverEl = this.labelLayer.createDiv({ cls: "ng-label ng-label-hover is-hidden" });
 
+		this.noticeEl = this.root.createDiv({ cls: "ng-notice", text: t().contextLost });
+
 		this.dashboard = new Dashboard(this.root, {
 			onOpenNote: (path) => this.openNote(path),
 			onRefresh: () => this.rebuild(),
@@ -143,6 +165,9 @@ export class NoteGalaxyView extends ItemView {
 		this.blackhole = new BlackHole();
 		this.scene.add(this.blackhole.group);
 
+		this.jets = new QuasarJets();
+		this.scene.add(this.jets.group);
+
 		this.composer = new EffectComposer(renderer);
 		this.composer.addPass(new RenderPass(this.scene, this.camera));
 		this.bloom = new UnrealBloomPass(
@@ -182,6 +207,9 @@ export class NoteGalaxyView extends ItemView {
 			this.canvas.toggleClass("is-hover-node", false);
 		});
 
+		this.canvas.addEventListener("webglcontextlost", this.handleContextLost);
+		this.canvas.addEventListener("webglcontextrestored", this.handleContextRestored);
+
 		this.resizeObserver = new ResizeObserver(() => this.resize());
 		this.resizeObserver.observe(this.root);
 
@@ -209,8 +237,13 @@ export class NoteGalaxyView extends ItemView {
 	rebuild(): void {
 		if (!this.scene) return;
 		const graph = buildGraph(this.app, this.plugin.settings.maxNodes);
-		layout3d(graph.nodes, graph.links, { minRadius: 16, maxRadius: 42 });
+		layout3d(graph.nodes, graph.links, {
+			minRadius: 16,
+			maxRadius: 42,
+			activityBias: this.plugin.settings.activityLayout ? 1 : 0,
+		});
 		this.lastGraph = graph;
+		this.activityLayoutApplied = this.plugin.settings.activityLayout;
 
 		if (this.notes) {
 			this.scene.remove(this.notes.group);
@@ -222,8 +255,66 @@ export class NoteGalaxyView extends ItemView {
 		this.notes.setFolderFilter(this.activeFolder);
 		this.scene.add(this.notes.group);
 
+		// Jets sit in the cloud's frame so the feed stream tracks the rotating hub.
+		if (this.jets) this.notes.group.add(this.jets.group);
+		this.updateJets();
+
 		this.buildLabels();
 		this.refreshDashboard(graph);
+	}
+
+	/** The best-connected note powers the quasar; below a few links it stays dark. */
+	private updateJets(): void {
+		if (!this.jets) return;
+		const graph = this.lastGraph;
+		if (!this.plugin.settings.quasar || !graph || graph.nodes.length === 0) {
+			this.jets.setPower(0);
+			this.jets.setFeed(null);
+			return;
+		}
+
+		let hubIndex = 0;
+		for (let i = 1; i < graph.nodes.length; i++) {
+			if (graph.nodes[i].degree > graph.nodes[hubIndex].degree) hubIndex = i;
+		}
+		const hub = graph.nodes[hubIndex];
+		if (hub.degree < 3) {
+			this.jets.setPower(0);
+			this.jets.setFeed(null);
+			return;
+		}
+
+		this.jets.setPower(Math.min(1, Math.log2(1 + hub.degree) / 8));
+		this.jets.setFeed(new THREE.Vector3(hub.x, hub.y, hub.z));
+	}
+
+	private prefersReducedMotion(): boolean {
+		return typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+	}
+
+	/**
+	 * A lost WebGL context cannot be reused by the old renderer, so every GPU-side
+	 * object is dropped and the scene is built again from the same settings.
+	 */
+	private restoreContext(): void {
+		if (!this.root) return;
+		this.infall?.dispose();
+		this.infall = null;
+		this.infallPath = null;
+		this.jets?.dispose();
+		this.jets = null;
+		this.notes?.dispose();
+		this.notes = null;
+		this.controls.dispose();
+		this.composer.dispose();
+		this.blackhole.dispose();
+		this.renderer.dispose();
+
+		this.quality = 1;
+		this.initScene();
+		this.rebuild();
+		this.startLoop();
+		this.root.removeClass("is-context-lost");
 	}
 
 	private buildLabels(): void {
@@ -263,6 +354,27 @@ export class NoteGalaxyView extends ItemView {
 		});
 	}
 
+	/** Steps down to a cheaper frame when the view cannot hold ~30 fps, and back up when it can. */
+	private trackFrameRate(delta: number): void {
+		if (!this.plugin.settings.adaptiveQuality) {
+			if (this.quality !== 1) this.setQuality(1);
+			return;
+		}
+		this.frameAvg = this.frameAvg === 0 ? delta : this.frameAvg * 0.92 + delta * 0.08;
+		if (++this.framesSinceCheck < 90) return;
+		this.framesSinceCheck = 0;
+		if (this.frameAvg > 0.033 && this.quality > 0.5) this.setQuality(0.5);
+		else if (this.frameAvg < 0.02 && this.quality < 1) this.setQuality(1);
+	}
+
+	private setQuality(level: number): void {
+		this.quality = level;
+		this.frameAvg = 0;
+		this.framesSinceCheck = 0;
+		this.renderer.setPixelRatio(level < 1 ? 1 : Math.min(window.devicePixelRatio || 1, 1.75));
+		this.resize();
+	}
+
 	private startLoop(): void {
 		this.clock.start();
 		const tick = (): void => {
@@ -278,6 +390,20 @@ export class NoteGalaxyView extends ItemView {
 				this.notes.group.updateMatrixWorld();
 				this.updateLabels();
 			}
+			if (this.infall) {
+				this.infall.update(delta);
+				if (this.infall.takeArrive() && this.infallPath) this.openNote(this.infallPath);
+				if (this.infall.finished) {
+					this.notes?.group.remove(this.infall.group);
+					this.infall.dispose();
+					this.infall = null;
+					this.infallPath = null;
+				}
+			}
+			this.jets?.update(this.time);
+			this.bloom.strength =
+				this.plugin.settings.bloom * this.quality + (this.infall ? this.infall.bloomBoost * 0.15 : 0);
+			this.trackFrameRate(delta);
 			this.controls.update();
 			this.composer.render();
 		};
@@ -350,7 +476,15 @@ export class NoteGalaxyView extends ItemView {
 		const hovered = this.notes.getHovered();
 		if (hovered < 0) return;
 		const node = this.notes.nodes[hovered];
-		if (node) this.openNote(node.path);
+		if (!node) return;
+
+		if (this.plugin.settings.transition && !this.prefersReducedMotion() && !this.infall) {
+			this.infall = new InfallEffect({ position: new THREE.Vector3(node.x, node.y, node.z), color: node.color });
+			this.notes.group.add(this.infall.group);
+			this.infallPath = node.path;
+			return;
+		}
+		this.openNote(node.path);
 	}
 
 	private openNote(path: string): void {
@@ -373,11 +507,14 @@ export class NoteGalaxyView extends ItemView {
 
 	applySettings(): void {
 		if (!this.root) return;
-		if (this.bloom) this.bloom.strength = this.plugin.settings.bloom;
+		if (this.bloom) this.bloom.strength = this.plugin.settings.bloom * this.quality;
 		this.notes?.setNodeScale(this.plugin.settings.nodeScale);
 		this.dashboard.setVisible(this.plugin.settings.showDashboard);
 		this.dashboard.relocalize();
+		if (this.noticeEl) this.noticeEl.textContent = t().contextLost;
 		if (this.lastGraph) this.refreshDashboard(this.lastGraph);
+		this.updateJets();
+		if (this.lastGraph && this.activityLayoutApplied !== this.plugin.settings.activityLayout) this.rebuild();
 
 		for (const item of this.toolbarButtons) {
 			const label = item.title();
@@ -392,11 +529,18 @@ export class NoteGalaxyView extends ItemView {
 
 	async onClose(): Promise<void> {
 		window.cancelAnimationFrame(this.raf);
+		this.canvas?.removeEventListener("webglcontextlost", this.handleContextLost);
+		this.canvas?.removeEventListener("webglcontextrestored", this.handleContextRestored);
 		if (this.rebuildTimer) window.clearTimeout(this.rebuildTimer);
 		this.resizeObserver?.disconnect();
 		this.resizeObserver = null;
 		this.notes?.dispose();
 		this.notes = null;
+		this.infall?.dispose();
+		this.infall = null;
+		this.infallPath = null;
+		this.jets?.dispose();
+		this.jets = null;
 		this.blackhole?.dispose();
 		this.dashboard?.destroy();
 		this.renderer?.dispose();

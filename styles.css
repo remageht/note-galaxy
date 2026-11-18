@@ -74,6 +74,26 @@
 	pointer-events: none;
 }
 
+.ng-notice {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	padding: 10px 18px;
+	border-radius: 999px;
+	font-size: 13px;
+	color: #e6ecff;
+	background: rgba(10, 14, 26, 0.82);
+	border: 1px solid rgba(140, 170, 255, 0.22);
+	display: none;
+	pointer-events: none;
+	z-index: 6;
+}
+
+.ng-root.is-context-lost .ng-notice {
+	display: block;
+}
+
 /* ---------- dashboard ---------- */
 
 .ng-dashboard {

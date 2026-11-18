@@ -5,6 +5,8 @@ export interface LayoutOptions {
 	minRadius?: number;
 	maxRadius?: number;
 	cellSize?: number;
+	/** 0..1 — how strongly stale notes are pushed out to the shell. */
+	activityBias?: number;
 }
 
 /** Small deterministic PRNG so the galaxy looks the same between reloads. */
@@ -34,6 +36,7 @@ export function layout3d(nodes: GraphNode[], links: GraphLink[], options: Layout
 	const rMin = options.minRadius ?? 12;
 	const rMax = options.maxRadius ?? 38;
 	const cell = options.cellSize ?? 6;
+	const activityBias = options.activityBias ?? 0;
 
 	const rnd = mulberry32(0x1f2e3d4c);
 	const golden = Math.PI * (3 - Math.sqrt(5));
@@ -43,8 +46,9 @@ export function layout3d(nodes: GraphNode[], links: GraphLink[], options: Layout
 		const y = 1 - 2 * ((i + 0.5) / n);
 		const ring = Math.sqrt(Math.max(0, 1 - y * y));
 		const phi = i * golden;
-		const base = node.kind === "project" ? rMin : rMin + 5;
-		const radius = base + rnd() * Math.max(2, rMax - base - 4);
+		const stale = activityBias > 0 ? (1 - (node.recency || 0)) * 9 * activityBias : 0;
+		const base = (node.kind === "project" ? rMin : rMin + 5) + stale;
+		const radius = Math.min(rMax - 2, base + rnd() * Math.max(2, rMax - base - 4));
 		node.x = Math.cos(phi) * ring * radius;
 		node.y = y * radius * 0.75;
 		node.z = Math.sin(phi) * ring * radius;

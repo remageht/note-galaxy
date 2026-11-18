@@ -61,6 +61,15 @@ export interface Strings {
 	settingOrbitDesc: string;
 	settingMaxNodes: string;
 	settingMaxNodesDesc: string;
+	settingTransition: string;
+	settingTransitionDesc: string;
+	settingQuasar: string;
+	settingQuasarDesc: string;
+	settingActivity: string;
+	settingActivityDesc: string;
+	settingAdaptive: string;
+	settingAdaptiveDesc: string;
+	contextLost: string;
 
 	whenJustNow: string;
 	whenMinutes: (n: number) => string;

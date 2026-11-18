@@ -7,6 +7,10 @@ export interface NoteGalaxySettings {
 	userName: string;
 	showDashboard: boolean;
 	showLabels: boolean;
+	transition: boolean;
+	quasar: boolean;
+	activityLayout: boolean;
+	adaptiveQuality: boolean;
 	bloom: number;
 	diskSpeed: number;
 	nodeScale: number;
@@ -19,6 +23,10 @@ export const DEFAULT_SETTINGS: NoteGalaxySettings = {
 	userName: "",
 	showDashboard: true,
 	showLabels: true,
+	transition: true,
+	quasar: true,
+	activityLayout: true,
+	adaptiveQuality: true,
 	bloom: 0.5,
 	diskSpeed: 1,
 	nodeScale: 1,
@@ -59,6 +67,26 @@ export class NoteGalaxySettingTab extends PluginSettingTab {
 				name: s.settingLabels,
 				desc: s.settingLabelsDesc,
 				control: { key: "showLabels", type: "toggle" },
+			},
+			{
+				name: s.settingTransition,
+				desc: s.settingTransitionDesc,
+				control: { key: "transition", type: "toggle" },
+			},
+			{
+				name: s.settingQuasar,
+				desc: s.settingQuasarDesc,
+				control: { key: "quasar", type: "toggle" },
+			},
+			{
+				name: s.settingActivity,
+				desc: s.settingActivityDesc,
+				control: { key: "activityLayout", type: "toggle" },
+			},
+			{
+				name: s.settingAdaptive,
+				desc: s.settingAdaptiveDesc,
+				control: { key: "adaptiveQuality", type: "toggle" },
 			},
 			{
 				name: s.settingBloom,
@@ -102,6 +130,18 @@ export class NoteGalaxySettingTab extends PluginSettingTab {
 				break;
 			case "showLabels":
 				settings.showLabels = Boolean(value);
+				break;
+			case "transition":
+				settings.transition = Boolean(value);
+				break;
+			case "quasar":
+				settings.quasar = Boolean(value);
+				break;
+			case "activityLayout":
+				settings.activityLayout = Boolean(value);
+				break;
+			case "adaptiveQuality":
+				settings.adaptiveQuality = Boolean(value);
 				break;
 			case "bloom":
 			case "diskSpeed":

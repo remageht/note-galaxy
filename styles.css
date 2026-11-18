@@ -1,8 +1,8 @@
 /* Note Galaxy — 3D graph view */
 
-.ng-host {
-	padding: 0 !important;
-	overflow: hidden !important;
+.workspace-leaf-content .view-content.ng-host {
+	padding: 0;
+	overflow: hidden;
 	background: #03040a;
 }
 
@@ -30,6 +30,10 @@
 
 .ng-canvas:active {
 	cursor: grabbing;
+}
+
+.ng-canvas.is-hover-node {
+	cursor: pointer;
 }
 
 .ng-labels {
@@ -63,6 +67,11 @@
 	background: rgba(62, 106, 255, 0.32);
 	border-color: rgba(150, 190, 255, 0.6);
 	box-shadow: 0 0 22px rgba(80, 130, 255, 0.45);
+}
+
+.ng-label-hover.is-hidden {
+	opacity: 0;
+	pointer-events: none;
 }
 
 /* ---------- dashboard ---------- */

@@ -87,22 +87,13 @@ export class NoteGalaxyView extends ItemView {
 		this.contentEl.empty();
 		this.contentEl.addClass("ng-host");
 
-		this.root = document.createElement("div");
-		this.root.className = "ng-root";
-		this.contentEl.appendChild(this.root);
+		this.root = this.contentEl.createDiv({ cls: "ng-root" });
 
-		this.canvas = document.createElement("canvas");
-		this.canvas.className = "ng-canvas";
-		this.root.appendChild(this.canvas);
+		this.canvas = this.root.createEl("canvas", { cls: "ng-canvas" });
 
-		this.labelLayer = document.createElement("div");
-		this.labelLayer.className = "ng-labels";
-		this.root.appendChild(this.labelLayer);
+		this.labelLayer = this.root.createDiv({ cls: "ng-labels" });
 
-		this.hoverEl = document.createElement("div");
-		this.hoverEl.className = "ng-label ng-label-hover";
-		this.hoverEl.style.opacity = "0";
-		this.labelLayer.appendChild(this.hoverEl);
+		this.hoverEl = this.labelLayer.createDiv({ cls: "ng-label ng-label-hover is-hidden" });
 
 		this.dashboard = new Dashboard(this.root, {
 			onOpenNote: (path) => this.openNote(path),
@@ -167,8 +158,7 @@ export class NoteGalaxyView extends ItemView {
 	}
 
 	private buildToolbar(): void {
-		const toolbar = document.createElement("div");
-		toolbar.className = "ng-toolbar";
+		const toolbar = this.root.createDiv({ cls: "ng-toolbar" });
 		const tools: [string, () => string, () => void][] = [
 			["refresh-cw", () => t().toolbarRebuild, () => this.rebuild()],
 			["crosshair", () => t().toolbarReset, () => this.resetView()],
@@ -179,7 +169,6 @@ export class NoteGalaxyView extends ItemView {
 			this.toolbarButtons.push({ el: button, title });
 			toolbar.appendChild(button);
 		}
-		this.root.appendChild(toolbar);
 	}
 
 	private attachEvents(): void {
@@ -190,7 +179,7 @@ export class NoteGalaxyView extends ItemView {
 		this.registerDomEvent(this.canvas, "pointerup", (event) => this.handlePointerUp(event));
 		this.registerDomEvent(this.canvas, "pointerleave", () => {
 			this.notes?.setHovered(-1);
-			this.canvas.style.cursor = "grab";
+			this.canvas.toggleClass("is-hover-node", false);
 		});
 
 		this.resizeObserver = new ResizeObserver(() => this.resize());
@@ -248,10 +237,7 @@ export class NoteGalaxyView extends ItemView {
 			.slice(0, MAX_LABELS);
 
 		for (const { index } of ranked) {
-			const label = document.createElement("div");
-			label.className = "ng-label";
-			label.textContent = this.notes.nodes[index].title;
-			this.labelLayer.appendChild(label);
+			const label = this.labelLayer.createDiv({ cls: "ng-label", text: this.notes.nodes[index].title });
 			this.labels.push({ index, el: label });
 		}
 	}
@@ -310,7 +296,7 @@ export class NoteGalaxyView extends ItemView {
 			const distance = world.distanceTo(cameraPosition);
 			const ndc = this.tmpNdc.copy(world).project(this.camera);
 			if (ndc.z > 1 || ndc.z < -1 || distance > 90) {
-				item.el.style.opacity = "0";
+				item.el.setCssStyles({ opacity: "0" });
 				continue;
 			}
 			const x = (ndc.x * 0.5 + 0.5) * width;
@@ -321,20 +307,20 @@ export class NoteGalaxyView extends ItemView {
 
 		const hovered = this.notes.getHovered();
 		if (hovered < 0) {
-			this.hoverEl.style.opacity = "0";
+			this.hoverEl.addClass("is-hidden");
 			return;
 		}
 		const world = this.notes.worldPosition(hovered, this.time, this.tmpVec);
 		const ndc = this.tmpNdc.copy(world).project(this.camera);
 		if (ndc.z > 1 || ndc.z < -1) {
-			this.hoverEl.style.opacity = "0";
+			this.hoverEl.addClass("is-hidden");
 			return;
 		}
 		const x = (ndc.x * 0.5 + 0.5) * width;
 		const y = (-ndc.y * 0.5 + 0.5) * height;
 		this.hoverEl.textContent = this.notes.nodes[hovered].title;
 		this.hoverEl.style.transform = `translate(-50%, -50%) translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
-		this.hoverEl.style.opacity = "1";
+		this.hoverEl.removeClass("is-hidden");
 	}
 
 	private handlePointerMove(event: PointerEvent): void {
@@ -353,7 +339,7 @@ export class NoteGalaxyView extends ItemView {
 		const instanceId = hits.length > 0 ? hits[0].instanceId : undefined;
 		const hovered = typeof instanceId === "number" ? instanceId : -1;
 		this.notes.setHovered(hovered);
-		this.canvas.style.cursor = hovered >= 0 ? "pointer" : "grab";
+		this.canvas.toggleClass("is-hover-node", hovered >= 0);
 	}
 
 	private handlePointerUp(event: PointerEvent): void {

@@ -93,7 +93,7 @@ function isProject(app: App, file: TFile): boolean {
 		if (PROJECT_TAGS.has(tag.split("/")[0])) return true;
 	}
 
-	const type = cache?.frontmatter?.type ?? cache?.frontmatter?.kind;
+	const type: unknown = cache?.frontmatter?.type ?? cache?.frontmatter?.kind;
 	return typeof type === "string" && type.toLowerCase() === "project";
 }
 

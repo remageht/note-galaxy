@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting } from "obsidian";
+import { App, PluginSettingTab, SettingDefinitionItem } from "obsidian";
 import type NoteGalaxyPlugin from "./main";
 import { LANGUAGES, t, LanguageSetting } from "./i18n";
 
@@ -34,135 +34,98 @@ export class NoteGalaxySettingTab extends PluginSettingTab {
 		this.plugin = plugin;
 	}
 
+	// Obsidian 1.13+ renders the tab from getSettingDefinitions(); this only
+	// satisfies the abstract contract inherited from SettingTab.
 	display(): void {
-		const { containerEl } = this;
+		this.containerEl.empty();
+	}
+
+	getSettingDefinitions(): SettingDefinitionItem[] {
 		const s = t();
-		containerEl.empty();
+		const languageOptions: Record<string, string> = { auto: s.languageAuto };
+		for (const language of LANGUAGES) languageOptions[language.code] = language.label;
 
-		new Setting(containerEl)
-			.setName(s.settingLanguage)
-			.setDesc(s.settingLanguageDesc)
-			.addDropdown((dropdown) => {
-				dropdown.addOption("auto", s.languageAuto);
-				for (const language of LANGUAGES) dropdown.addOption(language.code, language.label);
-				dropdown.setValue(this.plugin.settings.language);
-				dropdown.onChange(async (value) => {
-					this.plugin.settings.language = value as LanguageSetting;
-					await this.plugin.saveSettings();
-					this.plugin.applyLanguage();
-					this.display();
-				});
-			});
+		return [
+			{
+				name: s.settingLanguage,
+				desc: s.settingLanguageDesc,
+				control: { key: "language", type: "dropdown", options: languageOptions },
+			},
+			{
+				name: s.settingName,
+				desc: s.settingNameDesc,
+				control: { key: "userName", type: "text", placeholder: s.settingNamePlaceholder },
+			},
+			{
+				name: s.settingDashboard,
+				desc: s.settingDashboardDesc,
+				control: { key: "showDashboard", type: "toggle" },
+			},
+			{
+				name: s.settingLabels,
+				desc: s.settingLabelsDesc,
+				control: { key: "showLabels", type: "toggle" },
+			},
+			{
+				name: s.settingBloom,
+				desc: s.settingBloomDesc,
+				control: { key: "bloom", type: "slider", min: 0, max: 2, step: 0.05 },
+			},
+			{
+				name: s.settingDisk,
+				desc: s.settingDiskDesc,
+				control: { key: "diskSpeed", type: "slider", min: 0, max: 3, step: 0.05 },
+			},
+			{
+				name: s.settingStars,
+				desc: s.settingStarsDesc,
+				control: { key: "nodeScale", type: "slider", min: 0.4, max: 2.2, step: 0.05 },
+			},
+			{
+				name: s.settingOrbit,
+				desc: s.settingOrbitDesc,
+				control: { key: "orbitSpeed", type: "slider", min: 0, max: 2, step: 0.05 },
+			},
+			{
+				name: s.settingMaxNodes,
+				desc: s.settingMaxNodesDesc,
+				control: { key: "maxNodes", type: "slider", min: 100, max: 3000, step: 100 },
+			},
+		];
+	}
 
-		new Setting(containerEl)
-			.setName(s.settingName)
-			.setDesc(s.settingNameDesc)
-			.addText((text) =>
-				text
-					.setPlaceholder(s.settingNamePlaceholder)
-					.setValue(this.plugin.settings.userName)
-					.onChange(async (value) => {
-						this.plugin.settings.userName = value.trim();
-						await this.plugin.saveSettings();
-						this.plugin.applySettingsToViews();
-					}),
-			);
+	setControlValue(key: string, value: unknown): void {
+		const settings = this.plugin.settings;
+		switch (key) {
+			case "language":
+				settings.language = value as LanguageSetting;
+				break;
+			case "userName":
+				settings.userName = String(value ?? "").trim();
+				break;
+			case "showDashboard":
+				settings.showDashboard = Boolean(value);
+				break;
+			case "showLabels":
+				settings.showLabels = Boolean(value);
+				break;
+			case "bloom":
+			case "diskSpeed":
+			case "nodeScale":
+			case "orbitSpeed":
+				settings[key] = Number(value);
+				break;
+			case "maxNodes":
+				settings.maxNodes = Math.round(Number(value));
+				break;
+		}
 
-		new Setting(containerEl)
-			.setName(s.settingDashboard)
-			.setDesc(s.settingDashboardDesc)
-			.addToggle((toggle) =>
-				toggle.setValue(this.plugin.settings.showDashboard).onChange(async (value) => {
-					this.plugin.settings.showDashboard = value;
-					await this.plugin.saveSettings();
-					this.plugin.applySettingsToViews();
-				}),
-			);
-
-		new Setting(containerEl)
-			.setName(s.settingLabels)
-			.setDesc(s.settingLabelsDesc)
-			.addToggle((toggle) =>
-				toggle.setValue(this.plugin.settings.showLabels).onChange(async (value) => {
-					this.plugin.settings.showLabels = value;
-					await this.plugin.saveSettings();
-					this.plugin.applySettingsToViews();
-				}),
-			);
-
-		new Setting(containerEl)
-			.setName(s.settingBloom)
-			.setDesc(s.settingBloomDesc)
-			.addSlider((slider) =>
-				slider
-					.setLimits(0, 2, 0.05)
-					.setValue(this.plugin.settings.bloom)
-					.setDynamicTooltip()
-					.onChange(async (value) => {
-						this.plugin.settings.bloom = value;
-						await this.plugin.saveSettings();
-						this.plugin.applySettingsToViews();
-					}),
-			);
-
-		new Setting(containerEl)
-			.setName(s.settingDisk)
-			.setDesc(s.settingDiskDesc)
-			.addSlider((slider) =>
-				slider
-					.setLimits(0, 3, 0.05)
-					.setValue(this.plugin.settings.diskSpeed)
-					.setDynamicTooltip()
-					.onChange(async (value) => {
-						this.plugin.settings.diskSpeed = value;
-						await this.plugin.saveSettings();
-						this.plugin.applySettingsToViews();
-					}),
-			);
-
-		new Setting(containerEl)
-			.setName(s.settingStars)
-			.setDesc(s.settingStarsDesc)
-			.addSlider((slider) =>
-				slider
-					.setLimits(0.4, 2.2, 0.05)
-					.setValue(this.plugin.settings.nodeScale)
-					.setDynamicTooltip()
-					.onChange(async (value) => {
-						this.plugin.settings.nodeScale = value;
-						await this.plugin.saveSettings();
-						this.plugin.applySettingsToViews();
-					}),
-			);
-
-		new Setting(containerEl)
-			.setName(s.settingOrbit)
-			.setDesc(s.settingOrbitDesc)
-			.addSlider((slider) =>
-				slider
-					.setLimits(0, 2, 0.05)
-					.setValue(this.plugin.settings.orbitSpeed)
-					.setDynamicTooltip()
-					.onChange(async (value) => {
-						this.plugin.settings.orbitSpeed = value;
-						await this.plugin.saveSettings();
-						this.plugin.applySettingsToViews();
-					}),
-			);
-
-		new Setting(containerEl)
-			.setName(s.settingMaxNodes)
-			.setDesc(s.settingMaxNodesDesc)
-			.addSlider((slider) =>
-				slider
-					.setLimits(100, 3000, 100)
-					.setValue(this.plugin.settings.maxNodes)
-					.setDynamicTooltip()
-					.onChange(async (value) => {
-						this.plugin.settings.maxNodes = Math.round(value);
-						await this.plugin.saveSettings();
-						this.plugin.applySettingsToViews();
-					}),
-			);
+		void this.plugin.saveSettings().then(() => {
+			if (key === "language") {
+				this.plugin.applyLanguage();
+				this.update();
+			}
+			this.plugin.applySettingsToViews();
+		});
 	}
 }

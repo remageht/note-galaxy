@@ -80,7 +80,7 @@ void main() {
 
 function photonRingTexture(): THREE.Texture {
 	const size = 256;
-	const canvas = document.createElement("canvas");
+	const canvas = createEl("canvas");
 	canvas.width = size;
 	canvas.height = size;
 	const ctx = canvas.getContext("2d");
@@ -102,7 +102,7 @@ function photonRingTexture(): THREE.Texture {
 
 function starTexture(): THREE.Texture {
 	const size = 64;
-	const canvas = document.createElement("canvas");
+	const canvas = createEl("canvas");
 	canvas.width = size;
 	canvas.height = size;
 	const ctx = canvas.getContext("2d");
@@ -242,7 +242,7 @@ export class BlackHole {
 		this.group.traverse((object) => {
 			const mesh = object as THREE.Mesh;
 			if (mesh.geometry) mesh.geometry.dispose();
-			const material = (mesh as THREE.Mesh).material as THREE.Material | THREE.Material[] | undefined;
+			const material = mesh.material;
 			if (Array.isArray(material)) material.forEach((m) => m.dispose());
 			else if (material) material.dispose();
 		});

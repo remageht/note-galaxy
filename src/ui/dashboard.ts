@@ -36,8 +36,7 @@ function el<K extends keyof HTMLElementTagNameMap>(
 	className?: string,
 	text?: string,
 ): HTMLElementTagNameMap[K] {
-	const node = document.createElement(tag);
-	if (className) node.className = className;
+	const node = createEl(tag, className ? { cls: className } : {});
 	if (text !== undefined) node.textContent = text;
 	return node;
 }
@@ -243,10 +242,7 @@ export class Dashboard {
 
 /** Small helper so the view can build toolbar buttons with native icons. */
 export function iconButton(icon: string, title: string, onClick: () => void): HTMLButtonElement {
-	const button = document.createElement("button");
-	button.className = "ng-tool";
-	button.title = title;
-	button.setAttribute("aria-label", title);
+	const button = createEl("button", { cls: "ng-tool", title, attr: { "aria-label": title } });
 	setIcon(button, icon);
 	button.addEventListener("click", onClick);
 	return button;

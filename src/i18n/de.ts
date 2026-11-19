@@ -5,8 +5,10 @@ const de: Strings = {
 
 	ribbonOpen: "Note Galaxy: 3D-Graph öffnen",
 	commandOpen: "3D-Graph öffnen",
+	commandOpenDashboard: "Galaxie-Dashboard öffnen",
 	commandRebuild: "3D-Graph neu aufbauen",
 	viewTitle: "Note Galaxy",
+	dashboardTitle: "Galaxie-Dashboard",
 
 	greetingMorning: "Guten Morgen",
 	greetingDay: "Guten Tag",
@@ -31,6 +33,8 @@ const de: Strings = {
 	toolbarRebuild: "Graph neu aufbauen",
 	toolbarReset: "Ansicht zurücksetzen",
 	toolbarDashboard: "Dashboard",
+	actionMakeCenter: "Als Systemzentrum festlegen",
+	actionResetCenter: "Galaktischen Kern zurücksetzen",
 
 	settingLanguage: "Sprache",
 	settingLanguageDesc: "Sprache der Oberfläche. „Auto“ folgt der Obsidian-Sprache.",
@@ -65,6 +69,16 @@ const de: Strings = {
 	settingActivityDesc: "Kürzlich bearbeitete Notizen liegen nahe an der Scheibe, ältere driften nach außen.",
 	settingAdaptive: "Adaptive Qualität",
 	settingAdaptiveDesc: "Leuchtkraft und Details bei Einbrüchen automatisch reduzieren.",
+	settingIncludeTags: "Tags als Sterne anzeigen",
+	settingIncludeTagsDesc: "Beliebte Tags als leuchtende Sterne darstellen, die Notizen anziehen.",
+	settingOrbitalMotion: "Keplersche Orbitalbewegung",
+	settingOrbitalMotionDesc: "Innere Planeten kreisen nach Keplers Gesetzen schneller als äußere.",
+	settingPulses: "Lichtimpulse entlang der Links",
+	settingPulsesDesc: "Lichtteilchen zwischen verbundenen Notizen animieren.",
+	bodyStar: "Stern",
+	bodyGasGiant: "Gasriese",
+	bodyPlanet: "Planet",
+	bodyAsteroid: "Asteroid",
 	contextLost: "3D-Kontext verloren — Ansicht wird wiederhergestellt…",
 
 	whenJustNow: "gerade eben",

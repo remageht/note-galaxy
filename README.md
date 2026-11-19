@@ -20,6 +20,11 @@ the day's context.
   scroll zooms, drag orbits.
 - **11 languages** — English, Русский, Українська, Deutsch, Español, Français, Italiano,
   Português (Brasil), Polski, 简体中文, 日本語. Auto-detected from Obsidian, switchable in settings.
+- **Procedural celestial shaders & rings** — stars with convective boiling plasma, gas giants with atmospheric bands and Cassini-divided rings, terrestrial planets with oceans and Rayleigh scattering, and vertex-displaced craggy asteroids.
+- **Keplerian orbital dynamics** — notes orbit with differential angular velocities according to Kepler's laws, updating connection lines dynamically at 60 FPS.
+- **Photon pulse packets** — glowing energy packets continuously traverse links between connected notes.
+- **Dedicated Dashboard view** — open the dashboard in the right sidebar or split pane with live fly-to camera navigation.
+- **Focal gravity center** — right-click or use the toolbar button to center the whole galaxy around any note or tag-star ("Solar System" mode).
 - **Infall transition** — opening a note sends it spiralling into the horizon, with a
   shock ring at the crossing. Skipped when the system asks for reduced motion.
 - **Quasar jets** — the most connected note powers jets above and below the disk and

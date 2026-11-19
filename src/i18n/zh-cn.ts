@@ -5,8 +5,10 @@ const zhCN: Strings = {
 
 	ribbonOpen: "Note Galaxy：打开 3D 图谱",
 	commandOpen: "打开 3D 图谱",
+	commandOpenDashboard: "打开星系仪表盘",
 	commandRebuild: "重建 3D 图谱",
 	viewTitle: "Note Galaxy",
+	dashboardTitle: "星系仪表盘",
 
 	greetingMorning: "早上好",
 	greetingDay: "下午好",
@@ -31,6 +33,8 @@ const zhCN: Strings = {
 	toolbarRebuild: "重建图谱",
 	toolbarReset: "重置视图",
 	toolbarDashboard: "仪表盘",
+	actionMakeCenter: "设为系统中心",
+	actionResetCenter: "重置银河核心",
 
 	settingLanguage: "语言",
 	settingLanguageDesc: "界面语言。「自动」跟随 Obsidian 的语言。",
@@ -65,6 +69,16 @@ const zhCN: Strings = {
 	settingActivityDesc: "最近编辑的笔记停在吸积盘附近,久未编辑的漂向外圈。",
 	settingAdaptive: "自适应画质",
 	settingAdaptiveDesc: "帧率下降时自动降低辉光与细节。",
+	settingIncludeTags: "将标签显示为恒星",
+	settingIncludeTagsDesc: "将热门标签渲染为吸引笔记的发光恒星。",
+	settingOrbitalMotion: "开普勒轨道运动",
+	settingOrbitalMotionDesc: "内侧行星根据开普勒定律比外侧行星公转更快。",
+	settingPulses: "连接光脉冲",
+	settingPulsesDesc: "在关联笔记之间流动显示发光光子动画。",
+	bodyStar: "恒星",
+	bodyGasGiant: "气态巨行星",
+	bodyPlanet: "行星",
+	bodyAsteroid: "小行星",
 	contextLost: "3D 上下文已丢失 — 正在恢复视图…",
 
 	whenJustNow: "刚刚",

@@ -13,8 +13,10 @@ const pl: Strings = {
 
 	ribbonOpen: "Note Galaxy: otwórz graf 3D",
 	commandOpen: "Otwórz graf 3D",
+	commandOpenDashboard: "Otwórz panel galaktyki",
 	commandRebuild: "Przebuduj graf 3D",
 	viewTitle: "Note Galaxy",
+	dashboardTitle: "Panel Galaktyki",
 
 	greetingMorning: "Dzień dobry",
 	greetingDay: "Dzień dobry",
@@ -39,6 +41,8 @@ const pl: Strings = {
 	toolbarRebuild: "Przebuduj graf",
 	toolbarReset: "Przywróć widok",
 	toolbarDashboard: "Panel",
+	actionMakeCenter: "Ustaw jako centrum układu",
+	actionResetCenter: "Zresetuj jądro galaktyki",
 
 	settingLanguage: "Język",
 	settingLanguageDesc: "Język interfejsu. „Auto” podąża za językiem Obsidiana.",
@@ -73,6 +77,16 @@ const pl: Strings = {
 	settingActivityDesc: "Ostatnio edytowane notatki trafiają bliżej dysku, stare dryfują na zewnątrz.",
 	settingAdaptive: "Jakość adaptacyjna",
 	settingAdaptiveDesc: "Automatycznie obniża poświatę i detale, gdy spada liczba klatek.",
+	settingIncludeTags: "Uwzględnij tagi jako gwiazdy",
+	settingIncludeTagsDesc: "Wyświetlaj popularne tagi jako świecące gwiazdy przyciągające notatki.",
+	settingOrbitalMotion: "Ruch orbitalny Keplera",
+	settingOrbitalMotionDesc: "Planety wewnętrzne krążą szybciej zgodnie z prawami Keplera.",
+	settingPulses: "Impulsy świetlne na łączach",
+	settingPulsesDesc: "Animuj fotony wędrujące między połączonymi notatkami.",
+	bodyStar: "Gwiazda",
+	bodyGasGiant: "Gazowy olbrzym",
+	bodyPlanet: "Planeta",
+	bodyAsteroid: "Asteroida",
 	contextLost: "Utracono kontekst 3D — przywracam widok…",
 
 	whenJustNow: "przed chwilą",

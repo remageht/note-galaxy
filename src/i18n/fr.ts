@@ -5,8 +5,10 @@ const fr: Strings = {
 
 	ribbonOpen: "Note Galaxy : ouvrir le graphe 3D",
 	commandOpen: "Ouvrir le graphe 3D",
+	commandOpenDashboard: "Ouvrir le tableau de bord",
 	commandRebuild: "Reconstruire le graphe 3D",
 	viewTitle: "Note Galaxy",
+	dashboardTitle: "Tableau de Bord Galaxie",
 
 	greetingMorning: "Bonjour",
 	greetingDay: "Bon après-midi",
@@ -31,6 +33,8 @@ const fr: Strings = {
 	toolbarRebuild: "Reconstruire le graphe",
 	toolbarReset: "Réinitialiser la vue",
 	toolbarDashboard: "Tableau de bord",
+	actionMakeCenter: "Définir comme centre du système",
+	actionResetCenter: "Réinitialiser le noyau galactique",
 
 	settingLanguage: "Langue",
 	settingLanguageDesc: "Langue de l'interface. « Auto » suit la langue d'Obsidian.",
@@ -65,6 +69,16 @@ const fr: Strings = {
 	settingActivityDesc: "Les notes modifiées récemment se placent près du disque, les anciennes dérivent vers l'extérieur.",
 	settingAdaptive: "Qualité adaptative",
 	settingAdaptiveDesc: "Réduit automatiquement l'éclat et les détails quand les images chutent.",
+	settingIncludeTags: "Inclure les étiquettes comme étoiles",
+	settingIncludeTagsDesc: "Afficher les étiquettes populaires sous forme d'étoiles lumineuses.",
+	settingOrbitalMotion: "Mouvement orbital képlérien",
+	settingOrbitalMotionDesc: "Les planètes intérieures orbitent plus vite selon les lois de Kepler.",
+	settingPulses: "Impulsions lumineuses des liens",
+	settingPulsesDesc: "Animer des photons lumineux voyageant entre les notes connectées.",
+	bodyStar: "Étoile",
+	bodyGasGiant: "Géante gazeuse",
+	bodyPlanet: "Planète",
+	bodyAsteroid: "Astéroïde",
 	contextLost: "Contexte 3D perdu — restauration de la vue…",
 
 	whenJustNow: "à l'instant",

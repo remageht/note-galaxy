@@ -13,6 +13,9 @@ export interface NoteGalaxySettings {
 	quasar: boolean;
 	activityLayout: boolean;
 	adaptiveQuality: boolean;
+	includeTags: boolean;
+	orbitalMotion: boolean;
+	linkPulses: boolean;
 	bloom: number;
 	diskSpeed: number;
 	nodeScale: number;
@@ -30,6 +33,9 @@ export const DEFAULT_SETTINGS: NoteGalaxySettings = {
 	quasar: true,
 	activityLayout: true,
 	adaptiveQuality: true,
+	includeTags: true,
+	orbitalMotion: true,
+	linkPulses: true,
 	bloom: 0.32,
 	diskSpeed: 1,
 	nodeScale: 1,
@@ -105,6 +111,21 @@ export class NoteGalaxySettingTab extends PluginSettingTab {
 				control: { key: "adaptiveQuality", type: "toggle" },
 			},
 			{
+				name: s.settingIncludeTags,
+				desc: s.settingIncludeTagsDesc,
+				control: { key: "includeTags", type: "toggle" },
+			},
+			{
+				name: s.settingOrbitalMotion,
+				desc: s.settingOrbitalMotionDesc,
+				control: { key: "orbitalMotion", type: "toggle" },
+			},
+			{
+				name: s.settingPulses,
+				desc: s.settingPulsesDesc,
+				control: { key: "linkPulses", type: "toggle" },
+			},
+			{
 				name: s.settingBloom,
 				desc: s.settingBloomDesc,
 				control: { key: "bloom", type: "slider", min: 0, max: 2, step: 0.05 },
@@ -161,6 +182,15 @@ export class NoteGalaxySettingTab extends PluginSettingTab {
 				break;
 			case "adaptiveQuality":
 				settings.adaptiveQuality = Boolean(value);
+				break;
+			case "includeTags":
+				settings.includeTags = Boolean(value);
+				break;
+			case "orbitalMotion":
+				settings.orbitalMotion = Boolean(value);
+				break;
+			case "linkPulses":
+				settings.linkPulses = Boolean(value);
 				break;
 			case "bloom":
 			case "diskSpeed":

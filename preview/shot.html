@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>Note Galaxy — shot harness</title>
+		<style>
+			html,
+			body {
+				margin: 0;
+				height: 100%;
+				overflow: hidden;
+				background: #03040a;
+			}
+			#root {
+				position: absolute;
+				inset: 0;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="root"></div>
+		<script>
+			// createEl is an Obsidian global; the standalone harness needs a stand-in.
+			if (!window.createEl) {
+				window.createEl = (tag) => document.createElement(tag);
+			}
+		</script>
+		<script src="shot-bundle.js"></script>
+	</body>
+</html>

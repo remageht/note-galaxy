@@ -5,8 +5,10 @@ const es: Strings = {
 
 	ribbonOpen: "Note Galaxy: abrir el grafo 3D",
 	commandOpen: "Abrir grafo 3D",
+	commandOpenDashboard: "Abrir panel de galaxia",
 	commandRebuild: "Reconstruir grafo 3D",
 	viewTitle: "Note Galaxy",
+	dashboardTitle: "Panel de Galaxia",
 
 	greetingMorning: "Buenos días",
 	greetingDay: "Buenas tardes",
@@ -31,6 +33,8 @@ const es: Strings = {
 	toolbarRebuild: "Reconstruir grafo",
 	toolbarReset: "Restablecer vista",
 	toolbarDashboard: "Panel",
+	actionMakeCenter: "Fijar como centro del sistema",
+	actionResetCenter: "Restablecer núcleo galáctico",
 
 	settingLanguage: "Idioma",
 	settingLanguageDesc: "Idioma de la interfaz. «Auto» sigue el idioma de Obsidian.",
@@ -65,6 +69,16 @@ const es: Strings = {
 	settingActivityDesc: "Las notas editadas hace poco quedan cerca del disco; las antiguas se alejan.",
 	settingAdaptive: "Calidad adaptativa",
 	settingAdaptiveDesc: "Reduce el brillo y el detalle automáticamente si bajan los fotogramas.",
+	settingIncludeTags: "Incluir etiquetas como estrellas",
+	settingIncludeTagsDesc: "Representar etiquetas populares como estrellas brillantes que atraen notas.",
+	settingOrbitalMotion: "Movimiento orbital kepleriano",
+	settingOrbitalMotionDesc: "Los planetas interiores orbitan más rápido según las leyes de Kepler.",
+	settingPulses: "Pulsos de luz en enlaces",
+	settingPulsesDesc: "Animar fotones luminosos viajando entre notas conectadas.",
+	bodyStar: "Estrella",
+	bodyGasGiant: "Gigante gaseoso",
+	bodyPlanet: "Planeta",
+	bodyAsteroid: "Asteroide",
 	contextLost: "Se perdió el contexto 3D — restaurando la vista…",
 
 	whenJustNow: "ahora mismo",

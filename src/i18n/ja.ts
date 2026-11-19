@@ -5,8 +5,10 @@ const ja: Strings = {
 
 	ribbonOpen: "Note Galaxy：3Dグラフを開く",
 	commandOpen: "3Dグラフを開く",
+	commandOpenDashboard: "銀河ダッシュボードを開く",
 	commandRebuild: "3Dグラフを再構築",
 	viewTitle: "Note Galaxy",
+	dashboardTitle: "銀河ダッシュボード",
 
 	greetingMorning: "おはようございます",
 	greetingDay: "こんにちは",
@@ -31,6 +33,8 @@ const ja: Strings = {
 	toolbarRebuild: "グラフを再構築",
 	toolbarReset: "視点をリセット",
 	toolbarDashboard: "ダッシュボード",
+	actionMakeCenter: "システムの中心に設定",
+	actionResetCenter: "銀河核をリセット",
 
 	settingLanguage: "言語",
 	settingLanguageDesc: "インターフェースの言語。「自動」は Obsidian の言語に合わせます。",
@@ -65,6 +69,16 @@ const ja: Strings = {
 	settingActivityDesc: "最近更新したノートは円盤の近くへ、古いノートは外側へ流れます。",
 	settingAdaptive: "自動画質調整",
 	settingAdaptiveDesc: "フレームが落ちたとき、発光とディテールを自動で抑えます。",
+	settingIncludeTags: "タグを恒星として表示",
+	settingIncludeTagsDesc: "人気のタグをノートを引き寄せる輝く恒星として描画します。",
+	settingOrbitalMotion: "ケプラー軌道運動",
+	settingOrbitalMotionDesc: "ケプラーの法則に従い、内側の惑星ほど速く公転します。",
+	settingPulses: "リンクの光パルス",
+	settingPulsesDesc: "接続されたノート間を光子が移動するアニメーションを表示します。",
+	bodyStar: "恒星",
+	bodyGasGiant: "巨大ガス惑星",
+	bodyPlanet: "惑星",
+	bodyAsteroid: "小惑星",
 	contextLost: "3D コンテキストが失われました — ビューを復元中…",
 
 	whenJustNow: "たった今",

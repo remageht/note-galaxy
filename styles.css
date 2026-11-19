@@ -6,6 +6,30 @@
 	background: #03040a;
 }
 
+.workspace-leaf-content .view-content.ng-dashboard-host {
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+	background: #03040a;
+}
+
+.workspace-leaf-content .view-content.ng-dashboard-host .ng-dashboard {
+	position: relative;
+	left: 0;
+	top: 0;
+	width: 100%;
+	max-width: 100%;
+	height: 100%;
+	max-height: none;
+	border: none;
+	border-radius: 0;
+	background: transparent;
+	box-shadow: none;
+	backdrop-filter: none;
+	-webkit-backdrop-filter: none;
+	padding: 24px 20px;
+}
+
 .ng-root {
 	position: relative;
 	width: 100%;

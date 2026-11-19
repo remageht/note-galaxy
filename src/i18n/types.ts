@@ -18,8 +18,10 @@ export interface Strings {
 
 	ribbonOpen: string;
 	commandOpen: string;
+	commandOpenDashboard: string;
 	commandRebuild: string;
 	viewTitle: string;
+	dashboardTitle: string;
 
 	greetingMorning: string;
 	greetingDay: string;
@@ -44,6 +46,8 @@ export interface Strings {
 	toolbarRebuild: string;
 	toolbarReset: string;
 	toolbarDashboard: string;
+	actionMakeCenter: string;
+	actionResetCenter: string;
 
 	settingLanguage: string;
 	settingLanguageDesc: string;
@@ -78,6 +82,16 @@ export interface Strings {
 	settingActivityDesc: string;
 	settingAdaptive: string;
 	settingAdaptiveDesc: string;
+	settingIncludeTags: string;
+	settingIncludeTagsDesc: string;
+	settingOrbitalMotion: string;
+	settingOrbitalMotionDesc: string;
+	settingPulses: string;
+	settingPulsesDesc: string;
+	bodyStar: string;
+	bodyGasGiant: string;
+	bodyPlanet: string;
+	bodyAsteroid: string;
 	contextLost: string;
 
 	whenJustNow: string;

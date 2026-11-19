@@ -12,6 +12,7 @@ import { BlackHole } from "../scene/blackhole";
 import { NoteCloud } from "../scene/notes";
 import { InfallEffect } from "../scene/infall";
 import { QuasarJets } from "../scene/jets";
+import { PulseCloud } from "../scene/pulses";
 import { Dashboard, iconButton } from "../ui/dashboard";
 import { t } from "../i18n";
 
@@ -19,7 +20,7 @@ export const VIEW_TYPE = "note-galaxy-view";
 
 const MAX_LABELS = 60;
 
-function relativeTime(timestamp: number): string {
+export function relativeTime(timestamp: number): string {
 	const s = t();
 	const diff = Date.now() - timestamp;
 	const minutes = Math.floor(diff / 60_000);
@@ -48,6 +49,7 @@ export class NoteGalaxyView extends ItemView {
 	private controls!: OrbitControls;
 	private blackhole!: BlackHole;
 	private notes: NoteCloud | null = null;
+	private pulses: PulseCloud | null = null;
 	private jets: QuasarJets | null = null;
 	private infall: InfallEffect | null = null;
 	private infallPath: string | null = null;
@@ -188,6 +190,12 @@ export class NoteGalaxyView extends ItemView {
 		const tools: [string, () => string, () => void][] = [
 			["refresh-cw", () => t().toolbarRebuild, () => this.rebuild()],
 			["crosshair", () => t().toolbarReset, () => this.resetView()],
+			[
+				"sun",
+				() => (this.notes && this.notes.getFocalNode() >= 0 ? t().actionResetCenter : t().actionMakeCenter),
+				() => this.toggleFocalHovered(),
+			],
+			["layout-dashboard", () => t().commandOpenDashboard, () => void this.plugin.activateDashboardView()],
 			["panel-left", () => t().toolbarDashboard, () => this.toggleDashboard()],
 		];
 		for (const [icon, title, action] of tools) {
@@ -206,6 +214,22 @@ export class NoteGalaxyView extends ItemView {
 		this.registerDomEvent(this.canvas, "pointerleave", () => {
 			this.notes?.setHovered(-1);
 			this.canvas.toggleClass("is-hover-node", false);
+		});
+		this.registerDomEvent(this.canvas, "contextmenu", (event) => {
+			event.preventDefault();
+			const hovered = this.notes?.getHovered() ?? -1;
+			if (hovered >= 0) {
+				const current = this.notes?.getFocalNode() ?? -1;
+				if (current === hovered) {
+					this.resetView();
+				} else {
+					this.notes?.setFocalNode(hovered);
+					this.controls.target.set(0, 0, 0);
+					this.controls.update();
+				}
+			} else {
+				this.resetView();
+			}
 		});
 
 		this.canvas.addEventListener("webglcontextlost", this.handleContextLost);
@@ -237,7 +261,11 @@ export class NoteGalaxyView extends ItemView {
 
 	rebuild(): void {
 		if (!this.scene) return;
-		const graph = buildGraph(this.app, this.plugin.settings.maxNodes);
+		const graph = buildGraph(
+			this.app,
+			this.plugin.settings.maxNodes,
+			this.plugin.settings.includeTags,
+		);
 		layout3d(graph.nodes, graph.links, {
 			minRadius: 16,
 			maxRadius: 42,
@@ -256,9 +284,24 @@ export class NoteGalaxyView extends ItemView {
 			this.notes = null;
 		}
 
-		this.notes = new NoteCloud(graph.nodes, graph.links, this.plugin.settings.nodeScale);
+		this.notes = new NoteCloud(
+			graph.nodes,
+			graph.links,
+			this.plugin.settings.nodeScale,
+			this.plugin.settings.orbitalMotion,
+		);
 		this.notes.setFolderFilter(this.activeFolder);
 		this.scene.add(this.notes.group);
+
+		if (this.pulses) {
+			this.scene.remove(this.pulses.group);
+			this.pulses.dispose();
+			this.pulses = null;
+		}
+		if (this.plugin.settings.linkPulses) {
+			this.pulses = new PulseCloud(graph.links);
+			this.scene.add(this.pulses.group);
+		}
 
 		this.updateJets();
 
@@ -398,6 +441,9 @@ export class NoteGalaxyView extends ItemView {
 				this.notes.group.updateMatrixWorld();
 				this.updateLabels();
 			}
+			if (this.pulses && this.notes) {
+				this.pulses.update(delta, this.notes);
+			}
 			if (this.infall) {
 				this.infall.update(delta);
 				if (this.infall.takeArrive() && this.infallPath) this.openNote(this.infallPath);
@@ -496,6 +542,11 @@ export class NoteGalaxyView extends ItemView {
 		const node = this.notes.nodes[hovered];
 		if (!node) return;
 
+		if (node.kind === "tag") {
+			this.focusNode(node.path);
+			return;
+		}
+
 		if (this.plugin.settings.transition && !this.prefersReducedMotion() && !this.infall) {
 			this.infall = new InfallEffect({ position: new THREE.Vector3(node.x, node.y, node.z), color: node.color });
 			this.notes.group.add(this.infall.group);
@@ -510,10 +561,41 @@ export class NoteGalaxyView extends ItemView {
 		if (file instanceof TFile) void this.app.workspace.getLeaf(false).openFile(file);
 	}
 
-	private resetView(): void {
+	resetView(): void {
+		this.notes?.setFocalNode(-1);
 		this.camera.position.set(6, 30, 68);
 		this.controls.target.set(0, 0, 0);
 		this.controls.update();
+	}
+
+	setActiveFolder(folder: string | null): void {
+		this.activeFolder = folder;
+		this.notes?.setFolderFilter(folder);
+	}
+
+	focusNode(path: string): void {
+		if (!this.notes) return;
+		const index = this.notes.nodes.findIndex((n) => n.path === path);
+		if (index < 0) return;
+		this.notes.setHovered(index);
+		this.notes.worldPosition(index, this.time, this.tmpVec);
+		this.controls.target.copy(this.tmpVec);
+		this.controls.update();
+	}
+
+	toggleFocalHovered(): void {
+		if (!this.notes) return;
+		const current = this.notes.getFocalNode();
+		if (current >= 0) {
+			this.resetView();
+			return;
+		}
+		const hovered = this.notes.getHovered();
+		if (hovered >= 0) {
+			this.notes.setFocalNode(hovered);
+			this.controls.target.set(0, 0, 0);
+			this.controls.update();
+		}
 	}
 
 	private toggleDashboard(): void {
@@ -530,7 +612,13 @@ export class NoteGalaxyView extends ItemView {
 			this.bloom.strength = this.plugin.settings.bloom * this.quality;
 			this.bloom.enabled = this.quality >= 1 && this.bloom.strength > 0.01;
 		}
-		this.notes?.setNodeScale(this.plugin.settings.nodeScale);
+		if (this.notes) {
+			this.notes.setNodeScale(this.plugin.settings.nodeScale);
+			this.notes.orbitalMotion = this.plugin.settings.orbitalMotion;
+		}
+		if (this.pulses) {
+			this.pulses.group.visible = this.plugin.settings.linkPulses;
+		}
 		this.dashboard.setVisible(this.plugin.settings.showDashboard);
 		this.dashboard.relocalize();
 		if (this.noticeEl) this.noticeEl.textContent = t().contextLost;
@@ -560,6 +648,8 @@ export class NoteGalaxyView extends ItemView {
 		this.composer?.dispose();
 		this.notes?.dispose();
 		this.notes = null;
+		this.pulses?.dispose();
+		this.pulses = null;
 		this.infall?.dispose();
 		this.infall = null;
 		this.infallPath = null;

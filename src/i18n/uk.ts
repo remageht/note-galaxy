@@ -13,8 +13,10 @@ const uk: Strings = {
 
 	ribbonOpen: "Note Galaxy: відкрити 3D-граф",
 	commandOpen: "Відкрити 3D-граф",
+	commandOpenDashboard: "Відкрити дашборд галактики",
 	commandRebuild: "Перебудувати 3D-граф",
 	viewTitle: "Note Galaxy",
+	dashboardTitle: "Дашборд Галактики",
 
 	greetingMorning: "Доброго ранку",
 	greetingDay: "Доброго дня",
@@ -39,6 +41,8 @@ const uk: Strings = {
 	toolbarRebuild: "Перебудувати граф",
 	toolbarReset: "Скинути вид",
 	toolbarDashboard: "Панель",
+	actionMakeCenter: "Зробити центром системи",
+	actionResetCenter: "Скинути до чорної діри",
 
 	settingLanguage: "Мова",
 	settingLanguageDesc: "Мова інтерфейсу. «Авто» — як в Obsidian.",
@@ -73,6 +77,16 @@ const uk: Strings = {
 	settingActivityDesc: "Нещодавно змінені замітки стають близько до диска, старі віддаляються.",
 	settingAdaptive: "Адаптивна якість",
 	settingAdaptiveDesc: "Автоматично зменшувати сяйво й деталі при просіданні кадрів.",
+	settingIncludeTags: "Відображати теги як зорі",
+	settingIncludeTagsDesc: "Відображати популярні теги у вигляді сяючих зір, що притягують нотатки.",
+	settingOrbitalMotion: "Кеплерівський орбітальний рух",
+	settingOrbitalMotionDesc: "Внутрішні планети обертаються швидше за зовнішні за законами Кеплера.",
+	settingPulses: "Світлові імпульси зв'язків",
+	settingPulsesDesc: "Анімація фотонів, що рухаються між пов'язаними нотатками.",
+	bodyStar: "Зоря",
+	bodyGasGiant: "Газовий гігант",
+	bodyPlanet: "Планета",
+	bodyAsteroid: "Астероїд",
 	contextLost: "3D-контекст втрачено — відновлюю вигляд…",
 
 	whenJustNow: "щойно",

@@ -1,11 +1,13 @@
 import { App, TFile } from "obsidian";
 
-export type NodeKind = "note" | "project";
+export type NodeKind = "note" | "project" | "tag";
+export type CelestialType = "star" | "gas_giant" | "planet" | "asteroid";
 
 export interface GraphNode {
 	path: string;
 	title: string;
 	kind: NodeKind;
+	celestialType: CelestialType;
 	folder: string;
 	degree: number;
 	/** 1 = edited just now, 0 = untouched for a month or longer. */
@@ -104,9 +106,32 @@ function isProject(app: App, file: TFile): boolean {
  * Builds a compact picture of the vault: at most `maxNodes` nodes,
  * ranked by link degree and recency, plus the links between them.
  */
-export function buildGraph(app: App, maxNodes: number): VaultGraph {
+export function buildGraph(app: App, maxNodes: number, includeTags = true): VaultGraph {
 	const files = app.vault.getMarkdownFiles();
 	const resolved = app.metadataCache.resolvedLinks;
+
+	let totalProjects = 0;
+	const allTags = new Set<string>();
+	const tagNotes = new Map<string, string[]>();
+	for (const file of files) {
+		if (isProject(app, file)) totalProjects++;
+		const cache = app.metadataCache.getFileCache(file);
+		const tags = new Set<string>();
+		if (cache?.tags) {
+			for (const tag of cache.tags) tags.add(tag.tag.replace(/^#/, "").toLowerCase());
+		}
+		addTags(tags, cache?.frontmatter?.tags);
+		addTags(tags, cache?.frontmatter?.tag);
+		for (const tag of tags) {
+			allTags.add(tag);
+			let list = tagNotes.get(tag);
+			if (!list) {
+				list = [];
+				tagNotes.set(tag, list);
+			}
+			list.push(file.path);
+		}
+	}
 
 	const degree = new Map<string, number>();
 	let totalLinks = 0;
@@ -141,20 +166,69 @@ export function buildGraph(app: App, maxNodes: number): VaultGraph {
 		const color = project
 			? hueToHex(0.085, 0.85, 0.6 + 0.08 * recency)
 			: hueToHex(folder ? hashHue(folder) : 0.56, 0.62 + 0.14 * recency, 0.56 + 0.12 * recency);
+
+		let celestialType: CelestialType;
+		let size: number;
+		if (project) {
+			celestialType = "gas_giant";
+			size = 0.36 + Math.min(0.32, Math.log2(1 + deg) * 0.075) + recency * 0.05;
+		} else if (deg >= 10) {
+			celestialType = "star";
+			size = 0.42 + Math.min(0.42, Math.log2(1 + deg) * 0.085) + recency * 0.06;
+		} else if (deg >= 4) {
+			celestialType = "gas_giant";
+			size = 0.3 + Math.min(0.24, Math.log2(1 + deg) * 0.06) + recency * 0.04;
+		} else if (deg >= 2) {
+			celestialType = "planet";
+			size = 0.22 + Math.min(0.18, Math.log2(1 + deg) * 0.05) + recency * 0.03;
+		} else {
+			celestialType = "asteroid";
+			size = 0.14 + recency * 0.03;
+		}
+
 		return {
 			path: file.path,
 			title: file.basename,
 			kind: project ? "project" : "note",
+			celestialType,
 			folder: folder || "·",
 			degree: deg,
 			recency,
 			color,
-			size: 0.24 + Math.min(0.4, Math.log2(1 + deg) * 0.075) + (project ? 0.1 : 0) + recency * 0.05,
+			size,
 			x: 0,
 			y: 0,
 			z: 0,
 		};
 	});
+
+	const eligibleTags = includeTags
+		? [...tagNotes.entries()]
+				.filter(([_, paths]) => paths.length >= 2)
+				.sort((a, b) => b[1].length - a[1].length)
+				.slice(0, 30)
+		: [];
+
+	for (const [tag, paths] of eligibleTags) {
+		const tagIndex = nodes.length;
+		const tagDegree = paths.length;
+		index.set(`tag:${tag}`, tagIndex);
+		const tagSize = 0.48 + Math.min(0.75, Math.log2(1 + tagDegree) * 0.14);
+		nodes.push({
+			path: `tag:${tag}`,
+			title: `#${tag}`,
+			kind: "tag",
+			celestialType: "star",
+			folder: "tags",
+			degree: tagDegree,
+			recency: 0.85,
+			color: hueToHex(hashHue(tag), 0.95, 0.68),
+			size: tagSize,
+			x: 0,
+			y: 0,
+			z: 0,
+		});
+	}
 
 	const links: GraphLink[] = [];
 	const seen = new Set<string>();
@@ -171,6 +245,21 @@ export function buildGraph(app: App, maxNodes: number): VaultGraph {
 		}
 	}
 
+	if (includeTags) {
+		for (const [tag, paths] of eligibleTags) {
+			const ti = index.get(`tag:${tag}`);
+			if (ti === undefined) continue;
+			for (const p of paths) {
+				const fi = index.get(p);
+				if (fi === undefined) continue;
+				const key = fi < ti ? `${fi}:${ti}` : `${ti}:${fi}`;
+				if (seen.has(key)) continue;
+				seen.add(key);
+				links.push({ source: fi, target: ti });
+			}
+		}
+	}
+
 	const folderCounts = new Map<string, number>();
 	for (const node of nodes) {
 		if (node.folder === "·") continue;
@@ -181,20 +270,8 @@ export function buildGraph(app: App, maxNodes: number): VaultGraph {
 		.sort((a, b) => b.count - a.count)
 		.slice(0, 6);
 
-	let totalProjects = 0;
-	const allTags = new Set<string>();
-	for (const file of files) {
-		if (isProject(app, file)) totalProjects++;
-		const cache = app.metadataCache.getFileCache(file);
-		if (cache?.tags) {
-			for (const tag of cache.tags) allTags.add(tag.tag.replace(/^#/, "").toLowerCase());
-		}
-		addTags(allTags, cache?.frontmatter?.tags);
-		addTags(allTags, cache?.frontmatter?.tag);
-	}
-
 	const topHubs = nodes
-		.filter((n) => n.degree > 0)
+		.filter((n) => n.degree > 0 && n.kind !== "tag")
 		.slice(0, 8)
 		.map((n) => ({ title: n.title, path: n.path, degree: n.degree }));
 

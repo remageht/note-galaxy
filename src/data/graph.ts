@@ -36,6 +36,7 @@ export interface VaultGraph {
 	totalLinks: number;
 	totalTags: number;
 	folders: FolderInfo[];
+	topHubs: { title: string; path: string; degree: number }[];
 }
 
 const PROJECT_FOLDERS = new Set(["project", "projects", "проект", "проекты"]);
@@ -99,19 +100,6 @@ function isProject(app: App, file: TFile): boolean {
 	return typeof type === "string" && type.toLowerCase() === "project";
 }
 
-function collectTags(app: App, files: TFile[]): number {
-	const tags = new Set<string>();
-	for (const file of files) {
-		const cache = app.metadataCache.getFileCache(file);
-		if (cache?.tags) {
-			for (const tag of cache.tags) tags.add(tag.tag.replace(/^#/, "").toLowerCase());
-		}
-		addTags(tags, cache?.frontmatter?.tags);
-		addTags(tags, cache?.frontmatter?.tag);
-	}
-	return tags.size;
-}
-
 /**
  * Builds a compact picture of the vault: at most `maxNodes` nodes,
  * ranked by link degree and recency, plus the links between them.
@@ -143,13 +131,13 @@ export function buildGraph(app: App, maxNodes: number): VaultGraph {
 	const index = new Map<string, number>();
 	chosen.forEach((f, i) => index.set(f.path, i));
 
-	const now = Date.now();
+	const latestMtime = files.reduce((max, f) => Math.max(max, f.stat.mtime), 0);
 	const nodes: GraphNode[] = chosen.map((file) => {
 		const folder = topFolder(file.path);
 		const project = isProject(app, file);
 		const deg = degree.get(file.path) ?? 0;
-		const ageDays = Math.max(0, (now - file.stat.mtime) / 86_400_000);
-		const recency = Math.max(0, Math.min(1, 1 - ageDays / 30));
+		const ageDays = Math.max(0, (latestMtime - file.stat.mtime) / 86_400_000);
+		const recency = Math.max(0, Math.min(1, 1 - ageDays / 45));
 		const color = project
 			? hueToHex(0.085, 0.85, 0.6 + 0.08 * recency)
 			: hueToHex(folder ? hashHue(folder) : 0.56, 0.62 + 0.14 * recency, 0.56 + 0.12 * recency);
@@ -194,11 +182,21 @@ export function buildGraph(app: App, maxNodes: number): VaultGraph {
 		.slice(0, 6);
 
 	let totalProjects = 0;
+	const allTags = new Set<string>();
 	for (const file of files) {
 		if (isProject(app, file)) totalProjects++;
+		const cache = app.metadataCache.getFileCache(file);
+		if (cache?.tags) {
+			for (const tag of cache.tags) allTags.add(tag.tag.replace(/^#/, "").toLowerCase());
+		}
+		addTags(allTags, cache?.frontmatter?.tags);
+		addTags(allTags, cache?.frontmatter?.tag);
 	}
 
-	const tags = collectTags(app, files);
+	const topHubs = nodes
+		.filter((n) => n.degree > 0)
+		.slice(0, 8)
+		.map((n) => ({ title: n.title, path: n.path, degree: n.degree }));
 
 	return {
 		nodes,
@@ -206,7 +204,8 @@ export function buildGraph(app: App, maxNodes: number): VaultGraph {
 		totalNotes: files.length,
 		totalProjects,
 		totalLinks,
-		totalTags: tags,
+		totalTags: allTags.size,
 		folders,
+		topHubs,
 	};
 }

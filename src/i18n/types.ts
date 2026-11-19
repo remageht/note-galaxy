@@ -36,6 +36,10 @@ export interface Strings {
 	chipAll: string;
 	emptyRecent: string;
 	hint: string;
+	tabOverview: string;
+	tabHubs: string;
+	tabRecent: string;
+	sectionHubs: string;
 
 	toolbarRebuild: string;
 	toolbarReset: string;
@@ -44,6 +48,11 @@ export interface Strings {
 	settingLanguage: string;
 	settingLanguageDesc: string;
 	languageAuto: string;
+	settingCoreTheme: string;
+	settingCoreThemeDesc: string;
+	themeGargantua: string;
+	themePulsar: string;
+	themeSingularity: string;
 	settingName: string;
 	settingNameDesc: string;
 	settingNamePlaceholder: string;

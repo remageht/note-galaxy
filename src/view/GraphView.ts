@@ -54,6 +54,7 @@ export class NoteGalaxyView extends ItemView {
 	private noticeEl: HTMLDivElement | null = null;
 	private quality = 1;
 	private activityLayoutApplied = true;
+	private hubIndex = -1;
 
 	private readonly handleContextLost = (event: Event): void => {
 		event.preventDefault();
@@ -162,7 +163,7 @@ export class NoteGalaxyView extends ItemView {
 		this.controls.maxDistance = 130;
 		this.controls.target.set(0, 0, 0);
 
-		this.blackhole = new BlackHole();
+		this.blackhole = new BlackHole(this.plugin.settings.coreTheme);
 		this.scene.add(this.blackhole.group);
 
 		this.jets = new QuasarJets();
@@ -173,8 +174,8 @@ export class NoteGalaxyView extends ItemView {
 		this.bloom = new UnrealBloomPass(
 			new THREE.Vector2(1, 1),
 			this.plugin.settings.bloom,
-			0.4,
-			0.42,
+			0.35,
+			0.62,
 		);
 		this.composer.addPass(this.bloom);
 		this.composer.addPass(new OutputPass());
@@ -244,6 +245,10 @@ export class NoteGalaxyView extends ItemView {
 		});
 		this.lastGraph = graph;
 		this.activityLayoutApplied = this.plugin.settings.activityLayout;
+		this.hubIndex = -1;
+		for (let i = 0; i < graph.nodes.length; i++) {
+			if (this.hubIndex < 0 || graph.nodes[i].degree > graph.nodes[this.hubIndex].degree) this.hubIndex = i;
+		}
 
 		if (this.notes) {
 			this.scene.remove(this.notes.group);
@@ -255,8 +260,6 @@ export class NoteGalaxyView extends ItemView {
 		this.notes.setFolderFilter(this.activeFolder);
 		this.scene.add(this.notes.group);
 
-		// Jets sit in the cloud's frame so the feed stream tracks the rotating hub.
-		if (this.jets) this.notes.group.add(this.jets.group);
 		this.updateJets();
 
 		this.buildLabels();
@@ -273,19 +276,22 @@ export class NoteGalaxyView extends ItemView {
 			return;
 		}
 
-		let hubIndex = 0;
-		for (let i = 1; i < graph.nodes.length; i++) {
-			if (graph.nodes[i].degree > graph.nodes[hubIndex].degree) hubIndex = i;
-		}
+		let hubIndex = this.hubIndex;
+		if (hubIndex < 0 || hubIndex >= graph.nodes.length) hubIndex = 0;
 		const hub = graph.nodes[hubIndex];
-		if (hub.degree < 3) {
+		if (!hub || hub.degree < 3) {
 			this.jets.setPower(0);
 			this.jets.setFeed(null);
 			return;
 		}
 
 		this.jets.setPower(Math.min(1, Math.log2(1 + hub.degree) / 8));
-		this.jets.setFeed(new THREE.Vector3(hub.x, hub.y, hub.z));
+		if (this.notes) {
+			this.notes.worldPosition(hubIndex, this.time, this.tmpVec);
+			this.jets.setFeed(this.tmpVec);
+		} else {
+			this.jets.setFeed(new THREE.Vector3(hub.x, hub.y, hub.z));
+		}
 	}
 
 	private prefersReducedMotion(): boolean {
@@ -298,6 +304,7 @@ export class NoteGalaxyView extends ItemView {
 	 */
 	private restoreContext(): void {
 		if (!this.root) return;
+		window.cancelAnimationFrame(this.raf);
 		this.infall?.dispose();
 		this.infall = null;
 		this.infallPath = null;
@@ -336,7 +343,7 @@ export class NoteGalaxyView extends ItemView {
 	private refreshDashboard(graph: VaultGraph): void {
 		const recent = [...this.app.vault.getMarkdownFiles()]
 			.sort((a, b) => b.stat.mtime - a.stat.mtime)
-			.slice(0, 6)
+			.slice(0, 8)
 			.map((file) => ({
 				title: file.basename,
 				path: file.path,
@@ -350,6 +357,7 @@ export class NoteGalaxyView extends ItemView {
 			links: graph.totalLinks,
 			tags: graph.totalTags,
 			folders: graph.folders,
+			hubs: graph.topHubs,
 			recent,
 		});
 	}
@@ -383,7 +391,7 @@ export class NoteGalaxyView extends ItemView {
 			if (document.hidden) return;
 
 			this.time += delta;
-			this.blackhole.update(this.time);
+			this.blackhole.update(this.time, this.plugin.settings.diskSpeed);
 			if (this.notes) {
 				this.notes.group.rotation.y += delta * this.plugin.settings.orbitSpeed * 0.06;
 				this.notes.update(this.time);
@@ -400,9 +408,15 @@ export class NoteGalaxyView extends ItemView {
 					this.infallPath = null;
 				}
 			}
-			this.jets?.update(this.time);
+			if (this.jets) {
+				this.jets.update(this.time);
+				if (this.plugin.settings.quasar && this.notes && this.lastGraph) {
+					this.updateJets();
+				}
+			}
 			this.bloom.strength =
 				this.plugin.settings.bloom * this.quality + (this.infall ? this.infall.bloomBoost * 0.15 : 0);
+			this.bloom.enabled = this.quality >= 1 && this.bloom.strength > 0.01;
 			this.trackFrameRate(delta);
 			this.controls.update();
 			this.composer.render();
@@ -427,8 +441,10 @@ export class NoteGalaxyView extends ItemView {
 			}
 			const x = (ndc.x * 0.5 + 0.5) * width;
 			const y = (-ndc.y * 0.5 + 0.5) * height;
-			item.el.style.transform = `translate(-50%, -50%) translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
-			item.el.style.opacity = String(Math.max(0.18, Math.min(0.95, 1.3 - distance / 85)));
+			item.el.setCssStyles({
+				transform: `translate(-50%, -50%) translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`,
+				opacity: String(Math.max(0.18, Math.min(0.95, 1.3 - distance / 85))),
+			});
 		}
 
 		const hovered = this.notes.getHovered();
@@ -445,7 +461,9 @@ export class NoteGalaxyView extends ItemView {
 		const x = (ndc.x * 0.5 + 0.5) * width;
 		const y = (-ndc.y * 0.5 + 0.5) * height;
 		this.hoverEl.textContent = this.notes.nodes[hovered].title;
-		this.hoverEl.style.transform = `translate(-50%, -50%) translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`;
+		this.hoverEl.setCssStyles({
+			transform: `translate(-50%, -50%) translate(${x.toFixed(1)}px, ${y.toFixed(1)}px)`,
+		});
 		this.hoverEl.removeClass("is-hidden");
 	}
 
@@ -507,7 +525,11 @@ export class NoteGalaxyView extends ItemView {
 
 	applySettings(): void {
 		if (!this.root) return;
-		if (this.bloom) this.bloom.strength = this.plugin.settings.bloom * this.quality;
+		this.blackhole?.setTheme(this.plugin.settings.coreTheme);
+		if (this.bloom) {
+			this.bloom.strength = this.plugin.settings.bloom * this.quality;
+			this.bloom.enabled = this.quality >= 1 && this.bloom.strength > 0.01;
+		}
 		this.notes?.setNodeScale(this.plugin.settings.nodeScale);
 		this.dashboard.setVisible(this.plugin.settings.showDashboard);
 		this.dashboard.relocalize();
@@ -534,6 +556,8 @@ export class NoteGalaxyView extends ItemView {
 		if (this.rebuildTimer) window.clearTimeout(this.rebuildTimer);
 		this.resizeObserver?.disconnect();
 		this.resizeObserver = null;
+		this.controls?.dispose();
+		this.composer?.dispose();
 		this.notes?.dispose();
 		this.notes = null;
 		this.infall?.dispose();

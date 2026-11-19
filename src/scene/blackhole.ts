@@ -16,6 +16,9 @@ uniform float uSpeed;
 uniform float uInner;
 uniform float uOuter;
 uniform float uAlpha;
+uniform vec3 uColorHot;
+uniform vec3 uColorMid;
+uniform vec3 uColorCold;
 
 varying vec3 vPos;
 
@@ -62,21 +65,52 @@ void main() {
 	float streaks = pow(clamp(n * 0.75 + fine * 0.45, 0.0, 1.0), 1.7);
 
 	float heat = pow(1.0 - t, 1.15);
-	vec3 hot = vec3(1.0, 0.94, 0.86);
-	vec3 mid = vec3(1.0, 0.55, 0.18);
-	vec3 cold = vec3(0.55, 0.12, 0.05);
-	vec3 col = mix(cold, mid, smoothstep(0.15, 0.65, heat));
-	col = mix(col, hot, smoothstep(0.72, 1.0, heat));
+	vec3 col = mix(uColorCold, uColorMid, smoothstep(0.15, 0.65, heat));
+	col = mix(col, uColorHot, smoothstep(0.72, 1.0, heat));
 
-	// Relativistic beaming: one side of the ring looks much brighter.
-	float beam = 0.55 + 0.9 * pow(0.5 + 0.5 * cos(a - 0.9), 2.2);
+	// Relativistic beaming: one side of the ring looks brighter.
+	float beam = 0.7 + 0.5 * pow(0.5 + 0.5 * cos(a - 0.9), 2.2);
 
 	float edge = smoothstep(0.0, 0.05, t) * (1.0 - smoothstep(0.5, 1.0, t));
 	float alpha = (0.12 + 0.9 * streaks) * edge * (0.45 + 0.9 * heat) * beam * uAlpha;
 
-	gl_FragColor = vec4(col * (0.45 + 1.8 * heat), alpha);
+	gl_FragColor = vec4(col * (0.35 + 0.85 * heat), alpha);
 }
 `;
+
+export type BlackHoleTheme = "gargantua" | "pulsar" | "singularity";
+
+export interface ThemeConfig {
+	hot: [number, number, number];
+	mid: [number, number, number];
+	cold: [number, number, number];
+	haloColor: number;
+	speedMult: number;
+}
+
+export const THEMES: Record<BlackHoleTheme, ThemeConfig> = {
+	gargantua: {
+		hot: [1.0, 0.92, 0.82],
+		mid: [1.0, 0.55, 0.18],
+		cold: [0.55, 0.12, 0.05],
+		haloColor: 0xdfe9ff,
+		speedMult: 1.0,
+	},
+	pulsar: {
+		hot: [0.90, 0.96, 1.0],
+		mid: [0.18, 0.65, 1.0],
+		cold: [0.04, 0.18, 0.55],
+		haloColor: 0x8ad4ff,
+		speedMult: 1.5,
+	},
+	singularity: {
+		hot: [0.98, 0.92, 1.0],
+		mid: [0.72, 0.22, 0.95],
+		cold: [0.28, 0.04, 0.45],
+		haloColor: 0xda96ff,
+		speedMult: 0.8,
+	},
+};
 
 function photonRingTexture(): THREE.Texture {
 	const size = 256;
@@ -89,8 +123,8 @@ function photonRingTexture(): THREE.Texture {
 		const gradient = ctx.createRadialGradient(c, c, size * 0.3, c, c, size * 0.5);
 		gradient.addColorStop(0.0, "rgba(255,255,255,0)");
 		gradient.addColorStop(0.52, "rgba(170,210,255,0.04)");
-		gradient.addColorStop(0.74, "rgba(255,244,224,0.9)");
-		gradient.addColorStop(0.82, "rgba(140,190,255,0.3)");
+		gradient.addColorStop(0.74, "rgba(255,244,224,0.65)");
+		gradient.addColorStop(0.82, "rgba(140,190,255,0.22)");
 		gradient.addColorStop(1.0, "rgba(255,255,255,0)");
 		ctx.fillStyle = gradient;
 		ctx.fillRect(0, 0, size, size);
@@ -120,7 +154,7 @@ function starTexture(): THREE.Texture {
 	return texture;
 }
 
-function starfield(count: number): THREE.Points {
+function starfield(count: number, texture: THREE.Texture): THREE.Points {
 	const positions = new Float32Array(count * 3);
 	const colors = new Float32Array(count * 3);
 	const color = new THREE.Color();
@@ -147,7 +181,7 @@ function starfield(count: number): THREE.Points {
 	const material = new THREE.PointsMaterial({
 		size: 2.4,
 		sizeAttenuation: false,
-		map: starTexture(),
+		map: texture,
 		vertexColors: true,
 		transparent: true,
 		opacity: 0.75,
@@ -165,8 +199,11 @@ export class BlackHole {
 	private readonly core: THREE.Mesh;
 	private readonly halo: THREE.Sprite;
 	private readonly stars: THREE.Points;
+	private readonly haloTexture: THREE.Texture;
+	private readonly starsTexture: THREE.Texture;
+	private themeSpeedMult = 1.0;
 
-	constructor() {
+	constructor(theme: BlackHoleTheme = "gargantua") {
 		const tilt = new THREE.Group();
 		tilt.rotation.x = 0.1;
 		tilt.rotation.z = 0.16;
@@ -188,12 +225,13 @@ export class BlackHole {
 		);
 		tilt.add(this.core);
 
+		this.haloTexture = photonRingTexture();
 		this.halo = new THREE.Sprite(
 			new THREE.SpriteMaterial({
-				map: photonRingTexture(),
+				map: this.haloTexture,
 				color: 0xdfe9ff,
 				transparent: true,
-				opacity: 0.85,
+				opacity: 0.75,
 				depthWrite: false,
 				blending: THREE.AdditiveBlending,
 			}),
@@ -201,12 +239,28 @@ export class BlackHole {
 		this.halo.scale.setScalar(6.8);
 		tilt.add(this.halo);
 
-		this.stars = starfield(2600);
+		this.starsTexture = starTexture();
+		this.stars = starfield(2600, this.starsTexture);
 		this.group.add(this.stars);
+
+		this.setTheme(theme);
+	}
+
+	setTheme(themeName: string): void {
+		const theme = (Object.prototype.hasOwnProperty.call(THEMES, themeName) ? themeName : "gargantua") as BlackHoleTheme;
+		const cfg = THEMES[theme];
+		this.themeSpeedMult = cfg.speedMult;
+		for (const material of this.materials) {
+			material.uniforms.uColorHot.value.setRGB(...cfg.hot);
+			material.uniforms.uColorMid.value.setRGB(...cfg.mid);
+			material.uniforms.uColorCold.value.setRGB(...cfg.cold);
+		}
+		this.halo.material.color.setHex(cfg.haloColor);
 	}
 
 	private createDisk(inner: number, outer: number, alpha: number, speed: number): THREE.Mesh {
 		const geometry = new THREE.RingGeometry(inner, outer, 320, 8);
+		const cfg = THEMES.gargantua;
 		const material = new THREE.ShaderMaterial({
 			vertexShader: DISK_VERTEX,
 			fragmentShader: DISK_FRAGMENT,
@@ -216,6 +270,9 @@ export class BlackHole {
 				uInner: { value: inner },
 				uOuter: { value: outer },
 				uAlpha: { value: alpha },
+				uColorHot: { value: new THREE.Color(...cfg.hot) },
+				uColorMid: { value: new THREE.Color(...cfg.mid) },
+				uColorCold: { value: new THREE.Color(...cfg.cold) },
 			},
 			transparent: true,
 			depthWrite: false,
@@ -229,9 +286,9 @@ export class BlackHole {
 		return mesh;
 	}
 
-	update(time: number): void {
+	update(time: number, speedMultiplier = 1): void {
 		for (const material of this.materials) {
-			material.uniforms.uTime.value = time;
+			material.uniforms.uTime.value = time * this.themeSpeedMult * speedMultiplier;
 		}
 		// The photon ring breathes a little, like a real lensing caustic.
 		const pulse = 1 + Math.sin(time * 0.7) * 0.012;
@@ -246,5 +303,7 @@ export class BlackHole {
 			if (Array.isArray(material)) material.forEach((m) => m.dispose());
 			else if (material) material.dispose();
 		});
+		this.haloTexture.dispose();
+		this.starsTexture.dispose();
 	}
 }

@@ -54,6 +54,8 @@ export class InfallEffect {
 	private readonly halo: THREE.Sprite;
 	private readonly ring: THREE.Mesh;
 	private readonly color = new THREE.Color();
+	private readonly startColor = new THREE.Color();
+	private readonly currentPos = new THREE.Vector3();
 	private firedArrive = false;
 
 	constructor(seed: InfallSeed, duration = 0.72) {
@@ -62,6 +64,7 @@ export class InfallEffect {
 		this.startY = seed.position.y;
 		this.theta = Math.atan2(seed.position.z, seed.position.x);
 		this.color.setHex(seed.color);
+		this.startColor.setHex(seed.color);
 
 		const map = glowTexture();
 		for (let i = 0; i < TRAIL_POOL; i++) {
@@ -130,11 +133,12 @@ export class InfallEffect {
 		const t = this.progress;
 
 		const r = 2.4 + (this.radius - 2.4) * Math.pow(1 - t, 1.45);
-		this.theta += (900 / (r * r)) * (dt / this.duration);
+		const dTheta = (900 / (r * r)) * (dt / this.duration);
+		this.theta += Math.min(dTheta, 1.2);
 		const y = this.startY * Math.pow(1 - t, 1.9);
-		const position = new THREE.Vector3(r * Math.cos(this.theta), y, r * Math.sin(this.theta));
+		const position = this.currentPos.set(r * Math.cos(this.theta), y, r * Math.sin(this.theta));
 
-		this.color.setHex(GOLD.getHex()).lerp(HOT, Math.min(1, t * 2.2));
+		this.color.copy(this.startColor).lerp(HOT, Math.min(1, t * 2.2));
 		if (t > 0.55) this.color.lerp(DEEP, ((t - 0.55) / 0.45) * 0.75);
 
 		this.head.position.copy(position);

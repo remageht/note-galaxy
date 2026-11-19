@@ -1,6 +1,14 @@
 import { setIcon } from "obsidian";
 import { t } from "../i18n";
 
+export type DashboardTab = "overview" | "hubs" | "recent";
+
+export interface DashboardHub {
+	title: string;
+	path: string;
+	degree: number;
+}
+
 export interface DashboardFolder {
 	name: string;
 	color: number;
@@ -21,6 +29,7 @@ export interface DashboardData {
 	tags: number;
 	folders: DashboardFolder[];
 	recent: DashboardRecent[];
+	hubs: DashboardHub[];
 }
 
 export interface DashboardHandlers {
@@ -60,21 +69,32 @@ export class Dashboard {
 	private readonly subEl: HTMLDivElement;
 	private readonly clockEl: HTMLDivElement;
 	private readonly dateEl: HTMLDivElement;
+	private readonly tabOverviewBtn: HTMLButtonElement;
+	private readonly tabHubsBtn: HTMLButtonElement;
+	private readonly tabRecentBtn: HTMLButtonElement;
 	private readonly cardLabels: HTMLSpanElement[] = [];
+	private readonly cardsEl: HTMLDivElement;
 	private readonly statNotes: HTMLSpanElement;
 	private readonly statProjects: HTMLSpanElement;
 	private readonly statLinks: HTMLSpanElement;
 	private readonly statTags: HTMLSpanElement;
+	private readonly folderSection: HTMLDivElement;
 	private readonly folderTitleEl: HTMLDivElement;
 	private readonly foldersEl: HTMLDivElement;
+	private readonly hubsSection: HTMLDivElement;
+	private readonly hubsTitleEl: HTMLDivElement;
+	private readonly hubsEl: HTMLDivElement;
+	private readonly recentSection: HTMLDivElement;
 	private readonly recentTitleEl: HTMLDivElement;
 	private readonly recentEl: HTMLDivElement;
 	private readonly hintEl: HTMLDivElement;
 	private readonly clockTimer: number;
 
+	private activeTab: DashboardTab = "overview";
 	private activeFolder: string | null = null;
 	private folders: DashboardFolder[] = [];
 	private recent: DashboardRecent[] = [];
+	private hubs: DashboardHub[] = [];
 	private dataName = "";
 
 	constructor(parent: HTMLElement, private readonly handlers: DashboardHandlers) {
@@ -96,13 +116,23 @@ export class Dashboard {
 		meta.append(this.clockEl, this.dateEl);
 		this.root.appendChild(meta);
 
-		const cards = el("div", "ng-cards");
+		const tabs = el("div", "ng-tabs");
+		this.tabOverviewBtn = el("button", "ng-tab-btn is-active", s.tabOverview);
+		this.tabHubsBtn = el("button", "ng-tab-btn", s.tabHubs);
+		this.tabRecentBtn = el("button", "ng-tab-btn", s.tabRecent);
+		this.tabOverviewBtn.addEventListener("click", () => this.setTab("overview"));
+		this.tabHubsBtn.addEventListener("click", () => this.setTab("hubs"));
+		this.tabRecentBtn.addEventListener("click", () => this.setTab("recent"));
+		tabs.append(this.tabOverviewBtn, this.tabHubsBtn, this.tabRecentBtn);
+		this.root.appendChild(tabs);
+
+		this.cardsEl = el("div", "ng-cards");
 		const makeCard = (label: string): HTMLSpanElement => {
 			const card = el("div", "ng-card");
 			const num = el("span", "ng-num", "0");
 			const caption = el("span", "ng-lbl", label);
 			card.append(num, caption);
-			cards.appendChild(card);
+			this.cardsEl.appendChild(card);
 			this.cardLabels.push(caption);
 			return num;
 		};
@@ -110,25 +140,43 @@ export class Dashboard {
 		this.statProjects = makeCard(s.statProjects);
 		this.statLinks = makeCard(s.statLinks);
 		this.statTags = makeCard(s.statTags);
-		this.root.appendChild(cards);
+		this.root.appendChild(this.cardsEl);
 
-		const folderSection = el("div", "ng-section");
+		this.folderSection = el("div", "ng-section");
 		this.folderTitleEl = el("div", "ng-section-title", s.sectionFolders);
 		this.foldersEl = el("div", "ng-chips");
-		folderSection.append(this.folderTitleEl, this.foldersEl);
-		this.root.appendChild(folderSection);
+		this.folderSection.append(this.folderTitleEl, this.foldersEl);
+		this.root.appendChild(this.folderSection);
 
-		const recentSection = el("div", "ng-section");
+		this.hubsSection = el("div", "ng-section is-hidden");
+		this.hubsTitleEl = el("div", "ng-section-title", s.sectionHubs);
+		this.hubsEl = el("div", "ng-recent");
+		this.hubsSection.append(this.hubsTitleEl, this.hubsEl);
+		this.root.appendChild(this.hubsSection);
+
+		this.recentSection = el("div", "ng-section is-hidden");
 		this.recentTitleEl = el("div", "ng-section-title", s.sectionRecent);
 		this.recentEl = el("div", "ng-recent");
-		recentSection.append(this.recentTitleEl, this.recentEl);
-		this.root.appendChild(recentSection);
+		this.recentSection.append(this.recentTitleEl, this.recentEl);
+		this.root.appendChild(this.recentSection);
 
 		this.hintEl = el("div", "ng-hint", s.hint);
 		this.root.appendChild(this.hintEl);
 
 		this.updateClock();
 		this.clockTimer = window.setInterval(() => this.updateClock(), 20_000);
+	}
+
+	setTab(tab: DashboardTab): void {
+		this.activeTab = tab;
+		this.tabOverviewBtn.classList.toggle("is-active", tab === "overview");
+		this.tabHubsBtn.classList.toggle("is-active", tab === "hubs");
+		this.tabRecentBtn.classList.toggle("is-active", tab === "recent");
+
+		this.cardsEl.classList.toggle("is-hidden", tab !== "overview");
+		this.folderSection.classList.toggle("is-hidden", tab !== "overview");
+		this.hubsSection.classList.toggle("is-hidden", tab !== "hubs");
+		this.recentSection.classList.toggle("is-hidden", tab !== "recent");
 	}
 
 	private updateClock(): void {
@@ -159,7 +207,11 @@ export class Dashboard {
 	relocalize(): void {
 		const s = t();
 		this.eyebrowEl.textContent = s.eyebrow;
+		this.tabOverviewBtn.textContent = s.tabOverview;
+		this.tabHubsBtn.textContent = s.tabHubs;
+		this.tabRecentBtn.textContent = s.tabRecent;
 		this.folderTitleEl.textContent = s.sectionFolders;
+		this.hubsTitleEl.textContent = s.sectionHubs;
 		this.recentTitleEl.textContent = s.sectionRecent;
 		this.hintEl.textContent = s.hint;
 		const labels = [s.statNotes, s.statProjects, s.statLinks, s.statTags];
@@ -168,6 +220,7 @@ export class Dashboard {
 		});
 		this.updateClock();
 		this.renderFolders();
+		this.renderHubs();
 		this.renderRecent(this.recent);
 	}
 
@@ -184,7 +237,9 @@ export class Dashboard {
 
 		this.folders = data.folders;
 		this.recent = data.recent;
+		this.hubs = data.hubs ?? [];
 		this.renderFolders();
+		this.renderHubs();
 		this.renderRecent(data.recent);
 	}
 
@@ -203,7 +258,7 @@ export class Dashboard {
 			const chip = el("button", "ng-chip");
 			chip.classList.toggle("is-active", this.activeFolder === folder.name);
 			const dot = el("span", "ng-dot");
-			dot.style.background = hex(folder.color);
+			dot.setCssStyles({ background: hex(folder.color) });
 			const label = el("span", "ng-chip-label", folder.name);
 			const count = el("span", "ng-chip-count", String(folder.count));
 			chip.append(dot, label, count);
@@ -214,6 +269,23 @@ export class Dashboard {
 				this.renderFolders();
 			});
 			this.foldersEl.appendChild(chip);
+		}
+	}
+
+	private renderHubs(): void {
+		this.hubsEl.empty();
+		if (this.hubs.length === 0) {
+			this.hubsEl.appendChild(el("div", "ng-empty", t().emptyRecent));
+			return;
+		}
+		for (const hub of this.hubs) {
+			const row = el("button", "ng-recent-item");
+			const title = el("span", "ng-recent-title", hub.title);
+			const count = el("span", "ng-recent-when", t().linkCount(hub.degree));
+			row.append(title, count);
+			row.title = hub.path;
+			row.addEventListener("click", () => this.handlers.onOpenNote(hub.path));
+			this.hubsEl.appendChild(row);
 		}
 	}
 

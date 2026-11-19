@@ -36,6 +36,7 @@ export class QuasarJets {
 
 	private readonly halos: THREE.Mesh[] = [];
 	private readonly cores: THREE.Mesh[] = [];
+	private readonly dir = new THREE.Vector3();
 	private feed: THREE.Mesh | null = null;
 	private power = 0;
 
@@ -83,7 +84,7 @@ export class QuasarJets {
 
 	/** The accretion stream from the hub note to the horizon. */
 	setFeed(from: THREE.Vector3 | null): void {
-		if (!from) {
+		if (!from || from.length() < 0.001) {
 			if (this.feed) {
 				this.group.remove(this.feed);
 				this.feed.geometry.dispose();
@@ -108,10 +109,9 @@ export class QuasarJets {
 		}
 
 		const length = from.length();
-		if (length < 0.001) return;
 		this.feed.position.copy(from).multiplyScalar(0.5);
 		this.feed.scale.set(1, length, 1);
-		this.feed.quaternion.setFromUnitVectors(UP, from.clone().normalize());
+		this.feed.quaternion.setFromUnitVectors(UP, this.dir.copy(from).normalize());
 	}
 
 	update(time: number): void {

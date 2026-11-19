@@ -32,7 +32,7 @@ export function layout3d(nodes: GraphNode[], links: GraphLink[], options: Layout
 	const n = nodes.length;
 	if (n === 0) return;
 
-	const iterations = options.iterations ?? 180;
+	const iterations = options.iterations ?? (n > 600 ? 70 : 100);
 	const rMin = options.minRadius ?? 12;
 	const rMax = options.maxRadius ?? 38;
 	const cell = options.cellSize ?? 6;
@@ -149,6 +149,15 @@ export function layout3d(nodes: GraphNode[], links: GraphLink[], options: Layout
 			vx[i] -= node.x * 0.0035;
 			vy[i] -= node.y * 0.0035;
 			vz[i] -= node.z * 0.0035;
+
+			if (activityBias > 0) {
+				const staleRatio = 1 - (node.recency || 0);
+				const targetR = rMin + 4 + staleRatio * (rMax - rMin - 8);
+				const currentR = Math.sqrt(node.x * node.x + node.z * node.z) || 0.001;
+				const radialForce = (targetR - currentR) * 0.006 * activityBias;
+				vx[i] += (node.x / currentR) * radialForce;
+				vz[i] += (node.z / currentR) * radialForce;
+			}
 
 			const r = Math.sqrt(node.x * node.x + node.y * node.y + node.z * node.z) || 0.001;
 			if (r > rMax) {

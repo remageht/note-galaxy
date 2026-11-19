@@ -22,6 +22,10 @@ const fr: Strings = {
 	sectionRecent: "Récentes",
 	chipAll: "toutes",
 	emptyRecent: "Rien pour l'instant — créez votre première note.",
+	tabOverview: "Aperçu",
+	tabHubs: "Pôles",
+	tabRecent: "Récents",
+	sectionHubs: "Pôles majeurs",
 	hint: "Glisser — orbite · molette — zoom · clic sur une étoile — ouvrir la note",
 
 	toolbarRebuild: "Reconstruire le graphe",
@@ -31,6 +35,11 @@ const fr: Strings = {
 	settingLanguage: "Langue",
 	settingLanguageDesc: "Langue de l'interface. « Auto » suit la langue d'Obsidian.",
 	languageAuto: "Auto",
+	settingCoreTheme: "Cœur cosmique",
+	settingCoreThemeDesc: "Style visuel du trou noir central et du disque d'accrétion.",
+	themeGargantua: "Gargantua (Ambre)",
+	themePulsar: "Pulsar (Cyan)",
+	themeSingularity: "Singularité (Ultraviolet)",
 	settingName: "Nom pour le salut",
 	settingNameDesc: "Affiché comme « Bonsoir, … ». Laissez vide pour n'afficher que le salut.",
 	settingNamePlaceholder: "Emir",
@@ -64,8 +73,8 @@ const fr: Strings = {
 	whenDays: (n) => `${n} j`,
 	whenMonths: (n) => `${n} mois`,
 
-	noteCount: (n) => `${n} note${n === 1 ? "" : "s"}`,
-	linkCount: (n) => `${n} lien${n === 1 ? "" : "s"}`,
+	noteCount: (n) => `${n} note${n > 1 ? "s" : ""}`,
+	linkCount: (n) => `${n} lien${n > 1 ? "s" : ""}`,
 };
 
 export default fr;

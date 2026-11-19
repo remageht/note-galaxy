@@ -1,9 +1,11 @@
 import { App, PluginSettingTab, SettingDefinitionItem } from "obsidian";
 import type NoteGalaxyPlugin from "./main";
 import { LANGUAGES, t, LanguageSetting } from "./i18n";
+import { BlackHoleTheme } from "./scene/blackhole";
 
 export interface NoteGalaxySettings {
 	language: LanguageSetting;
+	coreTheme: BlackHoleTheme;
 	userName: string;
 	showDashboard: boolean;
 	showLabels: boolean;
@@ -20,6 +22,7 @@ export interface NoteGalaxySettings {
 
 export const DEFAULT_SETTINGS: NoteGalaxySettings = {
 	language: "auto",
+	coreTheme: "gargantua",
 	userName: "",
 	showDashboard: true,
 	showLabels: true,
@@ -27,7 +30,7 @@ export const DEFAULT_SETTINGS: NoteGalaxySettings = {
 	quasar: true,
 	activityLayout: true,
 	adaptiveQuality: true,
-	bloom: 0.5,
+	bloom: 0.32,
 	diskSpeed: 1,
 	nodeScale: 1,
 	orbitSpeed: 0.6,
@@ -52,6 +55,19 @@ export class NoteGalaxySettingTab extends PluginSettingTab {
 				name: s.settingLanguage,
 				desc: s.settingLanguageDesc,
 				control: { key: "language", type: "dropdown", options: languageOptions },
+			},
+			{
+				name: s.settingCoreTheme,
+				desc: s.settingCoreThemeDesc,
+				control: {
+					key: "coreTheme",
+					type: "dropdown",
+					options: {
+						gargantua: s.themeGargantua,
+						pulsar: s.themePulsar,
+						singularity: s.themeSingularity,
+					},
+				},
 			},
 			{
 				name: s.settingName,
@@ -116,11 +132,14 @@ export class NoteGalaxySettingTab extends PluginSettingTab {
 		];
 	}
 
-	setControlValue(key: string, value: unknown): void {
+	async setControlValue(key: string, value: unknown): Promise<void> {
 		const settings = this.plugin.settings;
 		switch (key) {
 			case "language":
 				settings.language = value as LanguageSetting;
+				break;
+			case "coreTheme":
+				settings.coreTheme = (value as BlackHoleTheme) ?? "gargantua";
 				break;
 			case "userName":
 				settings.userName = String(value ?? "").trim();
@@ -152,14 +171,20 @@ export class NoteGalaxySettingTab extends PluginSettingTab {
 			case "maxNodes":
 				settings.maxNodes = Math.round(Number(value));
 				break;
+			default:
+				break;
 		}
 
-		void this.plugin.saveSettings().then(() => {
+		try {
+			await this.plugin.saveSettings();
 			if (key === "language") {
 				this.plugin.applyLanguage();
 				this.update();
+			} else {
+				this.plugin.applySettingsToViews();
 			}
-			this.plugin.applySettingsToViews();
-		});
+		} catch (err) {
+			console.error("Note Galaxy: failed to save settings", err);
+		}
 	}
 }

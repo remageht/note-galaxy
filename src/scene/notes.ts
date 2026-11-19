@@ -31,6 +31,7 @@ export class NoteCloud {
 	private readonly linkList: GraphLink[];
 	private hovered = -1;
 	private focalIndex = -1;
+	private fallingIndex = -1;
 	private folderFilter: string | null = null;
 	private highlightLines: THREE.LineSegments | null = null;
 	orbitalMotion = true;
@@ -179,7 +180,23 @@ export class NoteCloud {
 		return this.focalIndex;
 	}
 
+	setFallingNode(index: number): void {
+		this.fallingIndex = index;
+	}
+
+	getFallingNode(): number {
+		return this.fallingIndex;
+	}
+
+	/** Position in this.group's local space, including orbiting, bobbing and focal offset. */
+	localPosition(index: number, target: THREE.Vector3): THREE.Vector3 {
+		if (index < 0 || index >= this.nodes.length) return target.set(0, 0, 0);
+		const i = index * 3;
+		return target.set(this.currentPositions[i], this.currentPositions[i + 1], this.currentPositions[i + 2]);
+	}
+
 	private nodeScaleAt(index: number, time: number): number {
+		if (index === this.fallingIndex) return 0.0001;
 		const node = this.nodes[index];
 		if (!node) return 0.001;
 		let scale = node.size * this.baseScale;

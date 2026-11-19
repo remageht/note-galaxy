@@ -60,7 +60,7 @@ export class InfallEffect {
 
 	constructor(seed: InfallSeed, duration = 0.72) {
 		this.duration = Math.max(0.2, duration);
-		this.radius = Math.max(6, Math.hypot(seed.position.x, seed.position.z));
+		this.radius = Math.max(2.6, Math.hypot(seed.position.x, seed.position.z));
 		this.startY = seed.position.y;
 		this.theta = Math.atan2(seed.position.z, seed.position.x);
 		this.color.setHex(seed.color);
@@ -88,11 +88,13 @@ export class InfallEffect {
 			new THREE.SphereGeometry(0.8, 20, 14),
 			new THREE.MeshBasicMaterial({ color: GOLD, transparent: true }),
 		);
+		this.head.position.copy(seed.position);
 		this.group.add(this.head);
 
 		this.halo = new THREE.Sprite(
 			new THREE.SpriteMaterial({ map, color: GOLD, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }),
 		);
+		this.halo.position.copy(seed.position);
 		this.group.add(this.halo);
 
 		this.ring = new THREE.Mesh(

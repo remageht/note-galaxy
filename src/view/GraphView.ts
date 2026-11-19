@@ -455,6 +455,7 @@ export class NoteGalaxyView extends ItemView {
 					this.infall.dispose();
 					this.infall = null;
 					this.infallPath = null;
+					this.notes?.setFallingNode(-1);
 				}
 			}
 			if (this.jets) {
@@ -540,9 +541,21 @@ export class NoteGalaxyView extends ItemView {
 		this.downPoint = null;
 		if (!start || !this.notes) return;
 		if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > 5) return;
-		const hovered = this.notes.getHovered();
-		if (hovered < 0) return;
-		const node = this.notes.nodes[hovered];
+
+		// Raycast directly at click coordinates to guarantee correct target note
+		const rect = this.canvas.getBoundingClientRect();
+		this.pointer.set(
+			((event.clientX - rect.left) / rect.width) * 2 - 1,
+			-((event.clientY - rect.top) / rect.height) * 2 + 1,
+		);
+		this.raycaster.setFromCamera(this.pointer, this.camera);
+		const hits = this.raycaster.intersectObject(this.notes.mesh, false);
+		const targetId = hits.length > 0 && typeof hits[0].instanceId === "number"
+			? hits[0].instanceId
+			: this.notes.getHovered();
+
+		if (targetId < 0) return;
+		const node = this.notes.nodes[targetId];
 		if (!node) return;
 
 		if (node.kind === "tag") {
@@ -551,7 +564,9 @@ export class NoteGalaxyView extends ItemView {
 		}
 
 		if (this.plugin.settings.transition && !this.prefersReducedMotion() && !this.infall) {
-			this.infall = new InfallEffect({ position: new THREE.Vector3(node.x, node.y, node.z), color: node.color });
+			const pos = this.notes.localPosition(targetId, this.tmpVec);
+			this.notes.setFallingNode(targetId);
+			this.infall = new InfallEffect({ position: pos.clone(), color: node.color });
 			this.notes.group.add(this.infall.group);
 			this.infallPath = node.path;
 			return;
@@ -566,6 +581,13 @@ export class NoteGalaxyView extends ItemView {
 
 	resetView(): void {
 		this.notes?.setFocalNode(-1);
+		this.notes?.setFallingNode(-1);
+		if (this.infall) {
+			this.notes?.group.remove(this.infall.group);
+			this.infall.dispose();
+			this.infall = null;
+			this.infallPath = null;
+		}
 		this.camera.position.set(6, 30, 68);
 		this.controls.target.set(0, 0, 0);
 		this.controls.update();

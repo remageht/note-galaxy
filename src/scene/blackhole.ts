@@ -251,9 +251,12 @@ export class BlackHole {
 		const cfg = THEMES[theme];
 		this.themeSpeedMult = cfg.speedMult;
 		for (const material of this.materials) {
-			material.uniforms.uColorHot.value.setRGB(...cfg.hot);
-			material.uniforms.uColorMid.value.setRGB(...cfg.mid);
-			material.uniforms.uColorCold.value.setRGB(...cfg.cold);
+			const hot = material.uniforms.uColorHot.value as THREE.Color;
+			const mid = material.uniforms.uColorMid.value as THREE.Color;
+			const cold = material.uniforms.uColorCold.value as THREE.Color;
+			hot.setRGB(...cfg.hot);
+			mid.setRGB(...cfg.mid);
+			cold.setRGB(...cfg.cold);
 		}
 		this.halo.material.color.setHex(cfg.haloColor);
 	}

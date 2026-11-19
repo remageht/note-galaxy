@@ -14,6 +14,7 @@ import { InfallEffect } from "../scene/infall";
 import { QuasarJets } from "../scene/jets";
 import { PulseCloud } from "../scene/pulses";
 import { Dashboard, iconButton } from "../ui/dashboard";
+import { loadVaultQuotes } from "../ui/quotes";
 import { t } from "../i18n";
 
 export const VIEW_TYPE = "note-galaxy-view";
@@ -196,7 +197,6 @@ export class NoteGalaxyView extends ItemView {
 				() => this.toggleFocalHovered(),
 			],
 			["layout-dashboard", () => t().commandOpenDashboard, () => void this.plugin.activateDashboardView()],
-			["panel-left", () => t().toolbarDashboard, () => this.toggleDashboard()],
 		];
 		for (const [icon, title, action] of tools) {
 			const button = iconButton(icon, title(), action);
@@ -393,15 +393,18 @@ export class NoteGalaxyView extends ItemView {
 				when: relativeTime(file.stat.mtime),
 			}));
 
-		this.dashboard.update({
-			userName: this.plugin.settings.userName,
-			notes: graph.totalNotes,
-			projects: graph.totalProjects,
-			links: graph.totalLinks,
-			tags: graph.totalTags,
-			folders: graph.folders,
-			hubs: graph.topHubs,
-			recent,
+		void loadVaultQuotes(this.app).then((vaultQuotes) => {
+			this.dashboard.update({
+				userName: this.plugin.settings.userName,
+				notes: graph.totalNotes,
+				projects: graph.totalProjects,
+				links: graph.totalLinks,
+				tags: graph.totalTags,
+				folders: graph.folders,
+				hubs: graph.topHubs,
+				recent,
+				vaultQuotes,
+			});
 		});
 	}
 

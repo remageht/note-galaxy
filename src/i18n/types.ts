@@ -94,6 +94,16 @@ export interface Strings {
 	bodyAsteroid: string;
 	contextLost: string;
 
+	quoteTitle: string;
+	quoteNext: string;
+	quoteCopied: string;
+	quoteCatAll: string;
+	quoteCatQuranSunnah: string;
+	quoteCatBible: string;
+	quoteCatScience: string;
+	quoteCatVault: string;
+	quoteEmptyVault: string;
+
 	whenJustNow: string;
 	whenMinutes: (n: number) => string;
 	whenHours: (n: number) => string;

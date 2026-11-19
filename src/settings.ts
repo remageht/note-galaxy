@@ -27,7 +27,7 @@ export const DEFAULT_SETTINGS: NoteGalaxySettings = {
 	language: "auto",
 	coreTheme: "gargantua",
 	userName: "",
-	showDashboard: true,
+	showDashboard: false,
 	showLabels: true,
 	transition: true,
 	quasar: true,

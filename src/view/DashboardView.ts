@@ -1,6 +1,7 @@
 import { ItemView, TFile, WorkspaceLeaf } from "obsidian";
 import type NoteGalaxyPlugin from "../main";
 import { Dashboard } from "../ui/dashboard";
+import { loadVaultQuotes } from "../ui/quotes";
 import { buildGraph, VaultGraph } from "../data/graph";
 import { NoteGalaxyView, relativeTime, VIEW_TYPE } from "./GraphView";
 import { t } from "../i18n";
@@ -34,16 +35,16 @@ export class GalaxyDashboardView extends ItemView {
 
 		this.dashboard = new Dashboard(this.contentEl, {
 			onOpenNote: (path) => this.handleNoteClick(path),
-			onRefresh: () => this.refresh(),
+			onRefresh: () => void this.refresh(),
 			onReset: () => this.focusGraphView(),
 			onToggle: () => {},
 			onFolder: (folder) => this.filterFolderInGraph(folder),
 		});
 
 		this.dashboard.setVisible(true);
-		this.refresh();
+		void this.refresh();
 
-		this.registerEvent(this.app.metadataCache.on("resolved", () => this.refresh()));
+		this.registerEvent(this.app.metadataCache.on("resolved", () => void this.refresh()));
 	}
 
 	private handleNoteClick(path: string): void {
@@ -90,7 +91,7 @@ export class GalaxyDashboardView extends ItemView {
 		}
 	}
 
-	refresh(graph?: VaultGraph): void {
+	async refresh(graph?: VaultGraph): Promise<void> {
 		if (!this.dashboard) return;
 		const g = graph ?? buildGraph(this.app, this.plugin.settings.maxNodes, this.plugin.settings.includeTags);
 		const recent = [...this.app.vault.getMarkdownFiles()]
@@ -102,6 +103,8 @@ export class GalaxyDashboardView extends ItemView {
 				when: relativeTime(file.stat.mtime),
 			}));
 
+		const vaultQuotes = await loadVaultQuotes(this.app);
+
 		this.dashboard.update({
 			userName: this.plugin.settings.userName,
 			notes: g.totalNotes,
@@ -111,12 +114,13 @@ export class GalaxyDashboardView extends ItemView {
 			folders: g.folders,
 			hubs: g.topHubs,
 			recent,
+			vaultQuotes,
 		});
 	}
 
 	relocalize(): void {
 		this.dashboard?.relocalize();
-		this.refresh();
+		void this.refresh();
 		const leaf = this.leaf as unknown as { updateHeader?: () => void };
 		leaf.updateHeader?.();
 	}

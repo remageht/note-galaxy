@@ -1,5 +1,6 @@
 import { setIcon } from "obsidian";
 import { t } from "../i18n";
+import { Quote, QuoteCategory, selectQuote } from "./quotes";
 
 export type DashboardTab = "overview" | "hubs" | "recent";
 
@@ -30,6 +31,7 @@ export interface DashboardData {
 	folders: DashboardFolder[];
 	recent: DashboardRecent[];
 	hubs: DashboardHub[];
+	vaultQuotes?: Quote[];
 }
 
 export interface DashboardHandlers {
@@ -72,26 +74,47 @@ export class Dashboard {
 	private readonly tabOverviewBtn: HTMLButtonElement;
 	private readonly tabHubsBtn: HTMLButtonElement;
 	private readonly tabRecentBtn: HTMLButtonElement;
-	private readonly cardLabels: HTMLSpanElement[] = [];
+
+	// Metrics
 	private readonly cardsEl: HTMLDivElement;
+	private readonly cardLabels: HTMLSpanElement[] = [];
 	private readonly statNotes: HTMLSpanElement;
 	private readonly statProjects: HTMLSpanElement;
 	private readonly statLinks: HTMLSpanElement;
 	private readonly statTags: HTMLSpanElement;
+
+	// Quote card
+	private readonly quoteCardEl: HTMLDivElement;
+	private readonly quoteTitleEl: HTMLSpanElement;
+	private readonly quoteTextEl: HTMLDivElement;
+	private readonly quoteSourceEl: HTMLSpanElement;
+	private readonly quoteRefEl: HTMLSpanElement;
+	private readonly quoteCatsEl: HTMLDivElement;
+	private readonly quoteCopyBtn: HTMLButtonElement;
+	private readonly quoteNextBtn: HTMLButtonElement;
+
+	// Folders (Constellations)
 	private readonly folderSection: HTMLDivElement;
 	private readonly folderTitleEl: HTMLDivElement;
 	private readonly foldersEl: HTMLDivElement;
+
+	// Hubs & Recent lists
 	private readonly hubsSection: HTMLDivElement;
 	private readonly hubsTitleEl: HTMLDivElement;
 	private readonly hubsEl: HTMLDivElement;
 	private readonly recentSection: HTMLDivElement;
 	private readonly recentTitleEl: HTMLDivElement;
 	private readonly recentEl: HTMLDivElement;
+
 	private readonly hintEl: HTMLDivElement;
 	private readonly clockTimer: number;
 
 	private activeTab: DashboardTab = "overview";
 	private activeFolder: string | null = null;
+	private activeQuoteCategory: QuoteCategory = "all";
+	private currentQuote: Quote | null = null;
+	private vaultQuotes: Quote[] = [];
+
 	private folders: DashboardFolder[] = [];
 	private recent: DashboardRecent[] = [];
 	private hubs: DashboardHub[] = [];
@@ -116,6 +139,7 @@ export class Dashboard {
 		meta.append(this.clockEl, this.dateEl);
 		this.root.appendChild(meta);
 
+		// Navigation Tabs
 		const tabs = el("div", "ng-tabs");
 		this.tabOverviewBtn = el("button", "ng-tab-btn is-active", s.tabOverview);
 		this.tabHubsBtn = el("button", "ng-tab-btn", s.tabHubs);
@@ -126,6 +150,7 @@ export class Dashboard {
 		tabs.append(this.tabOverviewBtn, this.tabHubsBtn, this.tabRecentBtn);
 		this.root.appendChild(tabs);
 
+		// Compact Metrics Strip (Overview tab)
 		this.cardsEl = el("div", "ng-cards");
 		const makeCard = (label: string): HTMLSpanElement => {
 			const card = el("div", "ng-card");
@@ -142,29 +167,73 @@ export class Dashboard {
 		this.statTags = makeCard(s.statTags);
 		this.root.appendChild(this.cardsEl);
 
+		// Quote / Wisdom of the Day Card (Overview tab)
+		this.quoteCardEl = el("div", "ng-quote-card");
+		const quoteHeader = el("div", "ng-quote-header");
+		const quoteTitleBox = el("div", "ng-quote-title-box");
+		const quoteIcon = el("span", "ng-quote-icon");
+		setIcon(quoteIcon, "sparkles");
+		this.quoteTitleEl = el("span", "ng-quote-title", s.quoteTitle);
+		quoteTitleBox.append(quoteIcon, this.quoteTitleEl);
+
+		const quoteActions = el("div", "ng-quote-actions");
+		this.quoteNextBtn = el("button", "ng-quote-btn", "");
+		this.quoteNextBtn.title = s.quoteNext;
+		this.quoteNextBtn.setAttribute("aria-label", s.quoteNext);
+		setIcon(this.quoteNextBtn, "refresh-cw");
+		this.quoteNextBtn.addEventListener("click", () => this.nextQuote());
+
+		this.quoteCopyBtn = el("button", "ng-quote-btn", "");
+		this.quoteCopyBtn.title = s.quoteCopied;
+		this.quoteCopyBtn.setAttribute("aria-label", s.quoteCopied);
+		setIcon(this.quoteCopyBtn, "copy");
+		this.quoteCopyBtn.addEventListener("click", () => this.copyQuote());
+
+		quoteActions.append(this.quoteNextBtn, this.quoteCopyBtn);
+		quoteHeader.append(quoteTitleBox, quoteActions);
+
+		// Category selector pills
+		this.quoteCatsEl = el("div", "ng-quote-cats");
+		this.renderQuoteCategories();
+
+		// Text & source
+		this.quoteTextEl = el("div", "ng-quote-text");
+		const quoteFooter = el("div", "ng-quote-footer");
+		this.quoteSourceEl = el("span", "ng-quote-source");
+		this.quoteRefEl = el("span", "ng-quote-ref");
+		quoteFooter.append(this.quoteSourceEl, this.quoteRefEl);
+
+		this.quoteCardEl.append(quoteHeader, this.quoteCatsEl, this.quoteTextEl, quoteFooter);
+		this.root.appendChild(this.quoteCardEl);
+
+		// Constellations / Folders (Overview tab)
 		this.folderSection = el("div", "ng-section");
 		this.folderTitleEl = el("div", "ng-section-title", s.sectionFolders);
 		this.foldersEl = el("div", "ng-chips");
 		this.folderSection.append(this.folderTitleEl, this.foldersEl);
 		this.root.appendChild(this.folderSection);
 
+		// Hubs (Hubs tab)
 		this.hubsSection = el("div", "ng-section is-hidden");
 		this.hubsTitleEl = el("div", "ng-section-title", s.sectionHubs);
 		this.hubsEl = el("div", "ng-recent");
 		this.hubsSection.append(this.hubsTitleEl, this.hubsEl);
 		this.root.appendChild(this.hubsSection);
 
+		// Recent (Recent tab)
 		this.recentSection = el("div", "ng-section is-hidden");
 		this.recentTitleEl = el("div", "ng-section-title", s.sectionRecent);
 		this.recentEl = el("div", "ng-recent");
 		this.recentSection.append(this.recentTitleEl, this.recentEl);
 		this.root.appendChild(this.recentSection);
 
+		// Hint (Overview tab)
 		this.hintEl = el("div", "ng-hint", s.hint);
 		this.root.appendChild(this.hintEl);
 
 		this.updateClock();
 		this.clockTimer = window.setInterval(() => this.updateClock(), 20_000);
+		this.nextQuote();
 	}
 
 	setTab(tab: DashboardTab): void {
@@ -173,10 +242,88 @@ export class Dashboard {
 		this.tabHubsBtn.classList.toggle("is-active", tab === "hubs");
 		this.tabRecentBtn.classList.toggle("is-active", tab === "recent");
 
-		this.cardsEl.classList.toggle("is-hidden", tab !== "overview");
-		this.folderSection.classList.toggle("is-hidden", tab !== "overview");
-		this.hubsSection.classList.toggle("is-hidden", tab !== "hubs");
-		this.recentSection.classList.toggle("is-hidden", tab !== "recent");
+		const isOverview = tab === "overview";
+		const isHubs = tab === "hubs";
+		const isRecent = tab === "recent";
+
+		this.cardsEl.classList.toggle("is-hidden", !isOverview);
+		this.quoteCardEl.classList.toggle("is-hidden", !isOverview);
+		this.folderSection.classList.toggle("is-hidden", !isOverview);
+		this.hintEl.classList.toggle("is-hidden", !isOverview);
+
+		this.hubsSection.classList.toggle("is-hidden", !isHubs);
+		this.recentSection.classList.toggle("is-hidden", !isRecent);
+	}
+
+	private renderQuoteCategories(): void {
+		this.quoteCatsEl.empty();
+		const s = t();
+		const categories: [QuoteCategory, string][] = [
+			["all", s.quoteCatAll],
+			["quran_sunnah", s.quoteCatQuranSunnah],
+			["bible", s.quoteCatBible],
+			["science", s.quoteCatScience],
+		];
+		if (this.vaultQuotes.length > 0) {
+			categories.push(["vault", s.quoteCatVault]);
+		}
+
+		for (const [cat, label] of categories) {
+			const btn = el("button", "ng-quote-cat-btn", label);
+			btn.classList.toggle("is-active", this.activeQuoteCategory === cat);
+			btn.addEventListener("click", () => {
+				this.activeQuoteCategory = cat;
+				this.renderQuoteCategories();
+				this.nextQuote();
+			});
+			this.quoteCatsEl.appendChild(btn);
+		}
+	}
+
+	private nextQuote(): void {
+		const next = selectQuote(
+			this.activeQuoteCategory,
+			this.vaultQuotes,
+			this.currentQuote?.id,
+		);
+		this.currentQuote = next;
+		this.renderQuote();
+	}
+
+	private renderQuote(): void {
+		const s = t();
+		if (!this.currentQuote) {
+			if (this.activeQuoteCategory === "vault") {
+				this.quoteTextEl.textContent = s.quoteEmptyVault;
+				this.quoteSourceEl.textContent = "";
+				this.quoteRefEl.textContent = "";
+			} else {
+				this.quoteTextEl.textContent = "";
+				this.quoteSourceEl.textContent = "";
+				this.quoteRefEl.textContent = "";
+			}
+			return;
+		}
+
+		this.quoteTextEl.textContent = `«${this.currentQuote.text}»`;
+		this.quoteSourceEl.textContent = this.currentQuote.source;
+		this.quoteRefEl.textContent = this.currentQuote.reference ? `· ${this.currentQuote.reference}` : "";
+	}
+
+	private copyQuote(): void {
+		if (!this.currentQuote) return;
+		const fullText = `«${this.currentQuote.text}» — ${this.currentQuote.source}${
+			this.currentQuote.reference ? ` (${this.currentQuote.reference})` : ""
+		}`;
+		void navigator.clipboard.writeText(fullText);
+
+		// Visual feedback
+		setIcon(this.quoteCopyBtn, "check");
+		this.quoteCopyBtn.classList.add("is-success");
+		window.setTimeout(() => {
+			setIcon(this.quoteCopyBtn, "copy");
+			this.quoteCopyBtn.classList.remove("is-success");
+		}, 1400);
 	}
 
 	private updateClock(): void {
@@ -210,6 +357,9 @@ export class Dashboard {
 		this.tabOverviewBtn.textContent = s.tabOverview;
 		this.tabHubsBtn.textContent = s.tabHubs;
 		this.tabRecentBtn.textContent = s.tabRecent;
+		this.quoteTitleEl.textContent = s.quoteTitle;
+		this.quoteNextBtn.title = s.quoteNext;
+		this.quoteCopyBtn.title = s.quoteCopied;
 		this.folderTitleEl.textContent = s.sectionFolders;
 		this.hubsTitleEl.textContent = s.sectionHubs;
 		this.recentTitleEl.textContent = s.sectionRecent;
@@ -218,6 +368,8 @@ export class Dashboard {
 		this.cardLabels.forEach((label, index) => {
 			label.textContent = labels[index] ?? "";
 		});
+		this.renderQuoteCategories();
+		this.renderQuote();
 		this.updateClock();
 		this.renderFolders();
 		this.renderHubs();
@@ -234,6 +386,18 @@ export class Dashboard {
 		this.statProjects.textContent = String(data.projects);
 		this.statLinks.textContent = String(data.links);
 		this.statTags.textContent = String(data.tags);
+
+		if (data.vaultQuotes) {
+			const prevCount = this.vaultQuotes.length;
+			this.vaultQuotes = data.vaultQuotes;
+			if (prevCount === 0 && data.vaultQuotes.length > 0) {
+				this.renderQuoteCategories();
+			}
+		}
+
+		if (!this.currentQuote) {
+			this.nextQuote();
+		}
 
 		this.folders = data.folders;
 		this.recent = data.recent;
